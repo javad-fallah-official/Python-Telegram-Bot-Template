@@ -1,13 +1,9 @@
-"""
-Configuration module for the Telegram bot.
-Loads environment variables and provides configuration settings.
-"""
+"""Configuration module for the Telegram bot."""
 
 import os
 from typing import List, Optional
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
 
@@ -28,7 +24,6 @@ class Config:
     # Bot mode: "polling" or "webhook"
     BOT_MODE: str = os.getenv("BOT_MODE", "polling").lower()
     
-    # Debug and logging
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO").upper()
     

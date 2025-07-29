@@ -1,8 +1,13 @@
-"""
-Services package initialization.
-"""
+"""Services package initialization."""
 
-from .webhook import WebhookService
-from .polling import PollingService
+from .base import BotService
+from .webhook import WebhookService, create_webhook_service
+from .polling import PollingService, create_polling_service
 
-__all__ = ["WebhookService", "PollingService"]
+__all__ = [
+    "BotService",
+    "WebhookService", 
+    "PollingService",
+    "create_webhook_service",
+    "create_polling_service"
+]

@@ -1,7 +1,4 @@
-"""
-Middleware module for the Telegram bot.
-Contains various middleware functions for logging, authentication, rate limiting, etc.
-"""
+"""Middleware module for the Telegram bot."""
 
 import logging
 import time

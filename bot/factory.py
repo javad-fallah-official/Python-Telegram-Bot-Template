@@ -1,7 +1,4 @@
-"""
-Bot factory module for creating and configuring the Telegram bot application.
-Handles both polling and webhook modes with proper setup.
-"""
+"""Bot factory module for creating and configuring the Telegram bot application."""
 
 import logging
 from telegram.ext import Application
@@ -16,20 +13,13 @@ class BotFactory:
     
     @staticmethod
     def create_application() -> Application:
-        """
-        Create and configure the Telegram bot application.
-        
-        Returns:
-            Configured Application instance
-        """
-        # Create application
+        """Create and configure the Telegram bot application."""
         application = (
             Application.builder()
             .token(Config.BOT_TOKEN)
             .build()
         )
         
-        # Register all handlers
         register_handlers(application)
         
         logger.info("Bot application created and configured")
@@ -39,17 +29,14 @@ class BotFactory:
     async def initialize_bot(application: Application) -> None:
         """Initialize the bot and perform startup tasks."""
         try:
-            # Initialize the application
             await application.initialize()
             
-            # Get bot info
             bot = application.bot
             bot_info = await bot.get_me()
             
             logger.info(f"Bot initialized: @{bot_info.username} ({bot_info.first_name})")
             logger.info(f"Bot ID: {bot_info.id}")
             
-            # Update config with bot username if not set
             if not Config.BOT_USERNAME:
                 Config.BOT_USERNAME = bot_info.username
             
@@ -68,10 +55,5 @@ class BotFactory:
 
 
 def create_bot() -> Application:
-    """
-    Create a configured Telegram bot application.
-    
-    Returns:
-        Configured Application instance
-    """
+    """Create a configured Telegram bot application."""
     return BotFactory.create_application()

@@ -1,7 +1,4 @@
-"""
-Database module for the Telegram bot.
-Provides simple database operations using SQLite with async support.
-"""
+"""Database module for the Telegram bot."""
 
 import aiosqlite
 import logging
