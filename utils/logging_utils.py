@@ -8,6 +8,7 @@ import functools
 from typing import Callable, Any, Dict, Optional
 from telegram import Update
 from telegram.ext import ContextTypes
+from core.config import Config
 from core.logger import get_logger, log_user_action, log_error, log_performance
 
 logger = get_logger('utils.logging')
@@ -268,6 +269,9 @@ def get_user_info_for_logging(update: Update) -> Dict[str, Any]:
 
 def log_startup_info():
     """Log bot startup information."""
+    if not Config.LOGGING_ENABLED:
+        return
+        
     from core.config import Config
     
     startup_logger = get_logger('startup')
@@ -276,6 +280,7 @@ def log_startup_info():
         'bot_mode': Config.BOT_MODE,
         'debug_mode': Config.DEBUG,
         'log_level': Config.LOG_LEVEL,
+        'logging_enabled': Config.LOGGING_ENABLED,
         'webhook_url': Config.WEBHOOK_URL if Config.BOT_MODE == 'webhook' else None,
         'admin_count': len(Config.ADMIN_USER_IDS) if Config.ADMIN_USER_IDS else 0
     }
@@ -286,6 +291,7 @@ def log_startup_info():
     startup_logger.info(f"Bot started in {Config.BOT_MODE} mode")
     startup_logger.info(f"Debug mode: {'Enabled' if Config.DEBUG else 'Disabled'}")
     startup_logger.info(f"Log level: {Config.LOG_LEVEL}")
+    startup_logger.info(f"Logging: {'Enabled' if Config.LOGGING_ENABLED else 'Disabled'}")
     
     if Config.ADMIN_USER_IDS:
         startup_logger.info(f"Configured {len(Config.ADMIN_USER_IDS)} admin users")
@@ -293,5 +299,8 @@ def log_startup_info():
 
 def log_shutdown_info():
     """Log bot shutdown information."""
+    if not Config.LOGGING_ENABLED:
+        return
+        
     shutdown_logger = get_logger('shutdown')
     shutdown_logger.info("Bot shutdown initiated")

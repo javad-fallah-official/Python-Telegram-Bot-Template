@@ -26,6 +26,7 @@ class Config:
     
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO").upper()
+    LOGGING_ENABLED: bool = os.getenv("LOGGING_ENABLED", "true").lower() == "true"
     
     # Admin settings
     ADMIN_USER_IDS: List[int] = [

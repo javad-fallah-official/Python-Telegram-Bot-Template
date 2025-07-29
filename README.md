@@ -276,9 +276,28 @@ WEBHOOK_URL=https://abc123.ngrok.io
 
 The template includes a comprehensive logging system with multiple output formats and advanced features:
 
+### Logging Toggle
+
+You can easily enable or disable the entire logging system via environment variable:
+
+```bash
+# Enable logging (default)
+LOGGING_ENABLED=true
+
+# Disable logging completely
+LOGGING_ENABLED=false
+```
+
+When `LOGGING_ENABLED=false`:
+- ❌ No log files are created
+- ❌ No console logging output
+- ❌ All logging functions become no-ops
+- ✅ Better performance (no I/O overhead)
+- ✅ Useful for production environments where external logging is used
+
 ### Log Files
 
-All logs are stored in the `logs/` directory:
+All logs are stored in the `logs/` directory (when logging is enabled):
 
 - **`bot.log`** - Main application log with detailed information
 - **`errors.log`** - Error-only log for quick issue identification  

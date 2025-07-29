@@ -87,10 +87,22 @@ class BotLogger:
     def __init__(self, log_level: Optional[str] = None):
         self.log_level = log_level or Config.LOG_LEVEL
         self.log_dir = Path("logs")
-        self.log_dir.mkdir(exist_ok=True)
+        self.logging_enabled = Config.LOGGING_ENABLED
         
         # Create main logger
         self.logger = logging.getLogger('telegram_bot')
+        
+        if not self.logging_enabled:
+            # Disable logging by setting to CRITICAL+1 and no handlers
+            self.logger.setLevel(logging.CRITICAL + 1)
+            self.logger.handlers.clear()
+            logging.getLogger().handlers.clear()
+            # Set all external loggers to CRITICAL+1 as well
+            self._disable_external_loggers()
+            return
+        
+        # Normal logging setup when enabled
+        self.log_dir.mkdir(exist_ok=True)
         self.logger.setLevel(getattr(logging, self.log_level))
         
         # Clear existing handlers
@@ -182,6 +194,20 @@ class BotLogger:
         
         # Database
         logging.getLogger('aiosqlite').setLevel(logging.WARNING)
+    
+    def _disable_external_loggers(self):
+        """Disable all external library loggers when logging is turned off."""
+        
+        # Set all external loggers to CRITICAL+1 to effectively disable them
+        external_loggers = [
+            'telegram', 'httpx', 'urllib3', 'aiohttp', 'uvicorn', 
+            'fastapi', 'aiosqlite', 'asyncio'
+        ]
+        
+        for logger_name in external_loggers:
+            logger = logging.getLogger(logger_name)
+            logger.setLevel(logging.CRITICAL + 1)
+            logger.handlers.clear()
     
     def get_logger(self, name: str = None) -> logging.Logger:
         """Get a logger instance."""
@@ -283,26 +309,26 @@ def get_logger(name: str = None) -> logging.Logger:
 def log_user_action(user_id: int, action: str, details: str = None, chat_id: int = None):
     """Log user actions with structured data."""
     global _bot_logger
-    if _bot_logger:
+    if _bot_logger and Config.LOGGING_ENABLED:
         _bot_logger.log_user_action(user_id, action, details, chat_id)
 
 
 def log_error(error: Exception, context: str = None, user_id: int = None):
     """Log errors with structured data."""
     global _bot_logger
-    if _bot_logger:
+    if _bot_logger and Config.LOGGING_ENABLED:
         _bot_logger.log_error(error, context, user_id)
 
 
 def log_performance(operation: str, duration: float, details: Dict[str, Any] = None):
     """Log performance metrics."""
     global _bot_logger
-    if _bot_logger:
+    if _bot_logger and Config.LOGGING_ENABLED:
         _bot_logger.log_performance(operation, duration, details)
 
 
 def log_security_event(event_type: str, user_id: int, details: str = None):
     """Log security-related events."""
     global _bot_logger
-    if _bot_logger:
+    if _bot_logger and Config.LOGGING_ENABLED:
         _bot_logger.log_security_event(event_type, user_id, details)
