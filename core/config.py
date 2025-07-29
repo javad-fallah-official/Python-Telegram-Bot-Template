@@ -50,7 +50,7 @@ class Config:
             if not cls.WEBHOOK_URL:
                 raise ValueError("WEBHOOK_URL is required for webhook mode")
             if not cls.WEBHOOK_SECRET_TOKEN:
-                logger.warning("WEBHOOK_SECRET_TOKEN not set - webhook security is reduced")
+                print("Warning: WEBHOOK_SECRET_TOKEN not set - webhook security is reduced")
     
     @classmethod
     def is_admin(cls, user_id: int) -> bool:

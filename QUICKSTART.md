@@ -20,30 +20,54 @@ uv add package_name
 
 ### 3. Run the Bot
 ```bash
-# Test the setup first
-uv run python test_setup.py
-
-# Run the basic bot
+# Run with default mode (from .env)
 uv run python main.py
 
-# Run the example bot with custom features
-uv run python example_bot.py
+# Run in specific mode
+uv run python main.py --mode polling
+uv run python main.py --mode webhook
+
+# Alternative entry points
+uv run python cli.py --mode polling
+uv run python run.py
+
+# Get help
+uv run python main.py --help
 ```
 
 ## 📁 Project Structure
 
 ```
-├── main.py              # Main bot runner (polling/webhook)
-├── config.py            # Configuration management
-├── bot.py               # Bot factory and setup
-├── handlers.py          # Command and message handlers
-├── webhook.py           # FastAPI webhook server
-├── middleware.py        # Rate limiting, admin checks, logging
-├── database.py          # Async SQLite database operations
-├── utils.py             # Utility classes and functions
-├── logger.py            # Logging configuration
-├── example_bot.py       # Example bot with custom features
-├── test_setup.py        # Setup verification script
+├── main.py              # Main entry point (uses CLI)
+├── cli.py               # Command-line interface
+├── run.py               # Simple run script
+├── bot.py               # Alternative entry point
+├── core/                # Core infrastructure
+│   ├── config.py        # Configuration management
+│   ├── runner.py        # Unified bot runner
+│   ├── database.py      # Async SQLite operations
+│   ├── logger.py        # Enhanced logging system
+│   └── middleware.py    # Rate limiting, admin checks
+├── bot/                 # Bot application layer
+│   ├── factory.py       # Bot creation and lifecycle
+│   └── handlers/        # Command and message handlers
+│       ├── commands.py  # Bot commands (/start, /help, etc.)
+│       ├── errors.py    # Error handling
+│       └── messages.py  # Message processing
+├── services/            # Service implementations
+│   ├── base.py          # Abstract service interface
+│   ├── polling.py       # Polling service
+│   └── webhook.py       # Webhook service (FastAPI)
+├── utils/               # Utility modules
+│   ├── logging_utils.py # Logging utilities and decorators
+│   ├── formatters.py    # Text formatting utilities
+│   ├── keyboards.py     # Keyboard builders
+│   └── validators.py    # Input validation
+├── examples/            # Example scripts
+│   ├── logging_demo.py  # Logging features demo
+│   └── logging_toggle_demo.py # Logging toggle demo
+├── scripts/             # Utility scripts
+│   └── analyze_logs.py  # Log analysis tool
 ├── .env.example         # Environment variables template
 ├── .env                 # Your environment variables (create this)
 ├── pyproject.toml       # Project dependencies
@@ -66,6 +90,7 @@ BOT_USERNAME=your_bot_username
 BOT_MODE=polling
 DEBUG=false
 LOG_LEVEL=INFO
+LOGGING_ENABLED=true
 ADMIN_USER_IDS=123456789,987654321
 DATABASE_URL=bot.db
 
