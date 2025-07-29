@@ -1,35 +1,61 @@
 """
 Command handlers module.
-Contains all command handlers for the Telegram bot.
+Contains all
+Command handlers for the Telegram bot.
 """
 
-import logging
+import time
 from telegram import Update
 from telegram.ext import ContextTypes
 from core.config import Config
+from core.logger import get_logger, log_user_action, log_error, log_performance, log_security_event
 
-logger = logging.getLogger(__name__)
+logger = get_logger('commands')
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle the /start command."""
-    user = update.effective_user
-    logger.info(f"User {user.id} ({user.username}) started the bot")
+    start_time = time.time()
     
-    welcome_message = (
-        f"👋 Hello {user.mention_html()}!\n\n"
-        "Welcome to this awesome Telegram bot template!\n\n"
-        "Available commands:\n"
-        "• /start - Show this welcome message\n"
-        "• /help - Get help information\n"
-        "• /status - Check bot status\n"
-        "• /echo <message> - Echo your message\n"
-    )
-    
-    if Config.is_admin(user.id):
-        welcome_message += "\n🔧 Admin commands:\n• /admin - Admin panel\n"
-    
-    await update.message.reply_html(welcome_message)
+    try:
+        user = update.effective_user
+        chat_id = update.effective_chat.id
+        
+        # Log user action
+        log_user_action(
+            user_id=user.id,
+            action='start',
+            details=f"First name: {user.first_name}, Username: {user.username}",
+            chat_id=chat_id
+        )
+        
+        welcome_message = (
+            f"👋 Hello {user.first_name}!\n\n"
+            "Welcome to the Telegram Bot Template! 🤖\n\n"
+            "Available commands:\n"
+            "• /help - Show help message\n"
+            "• /status - Check bot status\n"
+            "• /echo <message> - Echo your message\n"
+        )
+        
+        if Config.is_admin(user.id):
+            welcome_message += "• /admin - Admin panel (admin only)\n"
+        
+        await update.message.reply_text(welcome_message)
+        
+        # Log performance
+        duration = time.time() - start_time
+        log_performance('start_command', duration, {
+            'user_id': user.id,
+            'chat_id': chat_id,
+            'message_length': len(welcome_message)
+        })
+        
+        logger.info(f"Start command executed for user {user.id} ({user.first_name})")
+        
+    except Exception as e:
+        log_error(e, 'start_command', user_id=update.effective_user.id if update.effective_user else None)
+        await update.message.reply_text("❌ An error occurred while processing your request.")
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -85,25 +111,56 @@ async def echo_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle the /admin command (admin only)."""
-    user = update.effective_user
+    start_time = time.time()
     
-    if not Config.is_admin(user.id):
-        await update.message.reply_text("❌ You don't have permission to use this command.")
-        return
-    
-    logger.info(f"Admin {user.id} accessed admin panel")
-    
-    admin_message = (
-        "🔧 <b>Admin Panel</b>\n\n"
-        "Welcome to the admin panel!\n\n"
-        "<b>Available admin features:</b>\n"
-        "• Bot status monitoring\n"
-        "• User management\n"
-        "• System information\n\n"
-        "More admin features can be added here."
-    )
-    
-    await update.message.reply_html(admin_message)
+    try:
+        user = update.effective_user
+        chat_id = update.effective_chat.id
+        
+        # Check admin permissions
+        if not Config.is_admin(user.id):
+            log_security_event(
+                'unauthorized_admin_access',
+                user_id=user.id,
+                details=f"User {user.first_name} ({user.username}) attempted to access admin panel"
+            )
+            await update.message.reply_text("❌ You don't have permission to use this command.")
+            return
+        
+        # Log admin action
+        log_user_action(
+            user_id=user.id,
+            action='admin_panel_access',
+            details="Accessed admin panel",
+            chat_id=chat_id
+        )
+        
+        admin_message = (
+            "🔧 **Admin Panel**\n\n"
+            "Bot Status: ✅ Running\n"
+            f"Mode: {Config.BOT_MODE}\n"
+            f"Debug: {'Enabled' if Config.DEBUG else 'Disabled'}\n"
+            f"Log Level: {Config.LOG_LEVEL}\n\n"
+            "Available admin commands:\n"
+            "• /status - Detailed bot status\n"
+            "• View logs in the logs/ directory\n"
+        )
+        
+        await update.message.reply_text(admin_message, parse_mode='Markdown')
+        
+        # Log performance
+        duration = time.time() - start_time
+        log_performance('admin_command', duration, {
+            'user_id': user.id,
+            'chat_id': chat_id,
+            'admin_access': True
+        })
+        
+        logger.info(f"Admin panel accessed by user {user.id} ({user.first_name})")
+        
+    except Exception as e:
+        log_error(e, 'admin_command', user_id=update.effective_user.id if update.effective_user else None)
+        await update.message.reply_text("❌ An error occurred while processing your request.")
 
 
 async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

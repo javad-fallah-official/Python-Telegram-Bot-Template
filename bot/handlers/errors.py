@@ -1,28 +1,61 @@
-"""
-Error handlers module.
-Contains error handling functionality for the Telegram bot.
+"""Error handlers for the Telegram bot.
 """
 
-import logging
+import traceback
 from telegram import Update
 from telegram.ext import ContextTypes
+from core.logger import get_logger, log_error
 
-logger = logging.getLogger(__name__)
+logger = get_logger('errors')
 
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle errors that occur during bot operation."""
-    logger.error(f"Exception while handling an update: {context.error}")
     
-    # If we have an update with a message, try to inform the user
+    # Get user info if available
+    user_id = None
+    chat_id = None
+    if isinstance(update, Update) and update.effective_user:
+        user_id = update.effective_user.id
+        chat_id = update.effective_chat.id if update.effective_chat else None
+    
+    # Log the error with structured data
+    log_error(
+        error=context.error,
+        context='telegram_bot_operation',
+        user_id=user_id
+    )
+    
+    # Log additional context
+    logger.error(
+        f"Exception while handling an update: {context.error}",
+        extra={
+            'user_id': user_id,
+            'chat_id': chat_id,
+            'update_type': type(update).__name__ if update else 'Unknown',
+            'error_type': type(context.error).__name__
+        }
+    )
+    
+    # Send user-friendly error message if possible
     if isinstance(update, Update) and update.effective_message:
         try:
             await update.effective_message.reply_text(
                 "❌ Sorry, an error occurred while processing your request. "
-                "Please try again later."
+                "The issue has been logged and will be investigated."
             )
-        except Exception as e:
-            logger.error(f"Failed to send error message to user: {e}")
+        except Exception as send_error:
+            logger.error(f"Failed to send error message to user: {send_error}")
+    
+    # Log full traceback for debugging
+    if context.error:
+        tb_list = traceback.format_exception(
+            type(context.error), 
+            context.error, 
+            context.error.__traceback__
+        )
+        tb_string = ''.join(tb_list)
+        logger.debug(f"Full traceback:\n{tb_string}")
 
 
 async def timeout_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

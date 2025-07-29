@@ -272,6 +272,84 @@ WEBHOOK_URL=https://abc123.ngrok.io
 4. Update `WEBHOOK_URL` with your domain
 5. Set `BOT_MODE=webhook`
 
+## 📊 Logging
+
+The template includes a comprehensive logging system with multiple output formats and advanced features:
+
+### Log Files
+
+All logs are stored in the `logs/` directory:
+
+- **`bot.log`** - Main application log with detailed information
+- **`errors.log`** - Error-only log for quick issue identification  
+- **`bot.json`** - Structured JSON logs for analysis and monitoring
+- **`debug.log`** - Detailed debug information (only in debug mode)
+
+### Log Features
+
+- **Colored Console Output** - Easy-to-read colored logs in the terminal
+- **Log Rotation** - Automatic rotation when files reach size limits
+- **Structured Logging** - JSON format with user IDs, commands, and context
+- **Performance Tracking** - Automatic timing of operations
+- **Security Logging** - Track unauthorized access attempts
+- **User Action Logging** - Track all user interactions with context
+
+### Using Enhanced Logging
+
+```python
+from core.logger import get_logger, log_user_action, log_error, log_performance
+from utils.logging_utils import log_command_execution, LogContext
+
+# Get a logger
+logger = get_logger('my_module')
+
+# Log user actions with context
+log_user_action(user_id=123, action='custom_command', details='Additional info')
+
+# Log errors with context
+try:
+    # Some operation
+    pass
+except Exception as e:
+    log_error(e, 'operation_context', user_id=123)
+
+# Log performance metrics
+log_performance('database_query', 0.150, {'query_type': 'SELECT'})
+
+# Use decorators for automatic logging
+@log_command_execution('my_command')
+async def my_command_handler(update, context):
+    # Command logic here
+    pass
+
+# Use context manager for operation timing
+async with LogContext('complex_operation', extra_data={'param': 'value'}):
+    # Your operation here
+    pass
+```
+
+### Log Analysis
+
+Analyze your bot's performance and usage with the built-in log analyzer:
+
+```bash
+# Analyze last 24 hours
+python scripts/analyze_logs.py
+
+# Analyze last 7 days  
+python scripts/analyze_logs.py --hours 168
+
+# Save report to file
+python scripts/analyze_logs.py --output report.txt
+```
+
+The analyzer provides:
+- User activity statistics
+- Command usage patterns  
+- Performance metrics
+- Error analysis
+- Hourly activity distribution
+
 ## 📊 Monitoring
 
 ### Health Check
@@ -280,13 +358,9 @@ When running in webhook mode, access:
 - `GET /health` - Health check endpoint
 - `GET /` - Basic info endpoint
 
-### Logs
+### Log Levels
 
-Logs are written to:
-- Console (stdout)
-- `bot.log` file
-
-Log levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+Supported log levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
 
 ## 🛡️ Security Features
 

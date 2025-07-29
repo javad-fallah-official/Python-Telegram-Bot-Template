@@ -3,17 +3,17 @@
 import asyncio
 import signal
 import sys
-import logging
 from typing import Optional
 
 from core.config import Config
-from core.logger import setup_logging
+from core.logger import setup_logging, get_logger
+from utils.logging_utils import log_startup_info, log_shutdown_info
 from bot import create_bot, BotFactory
 from services.polling import create_polling_service
 from services.webhook import create_webhook_service
 from services.base import BotService
 
-logger = logging.getLogger(__name__)
+logger = get_logger('runner')
 
 
 class BotRunner:
@@ -130,12 +130,28 @@ def main() -> None:
     setup_logging()
     
     try:
+        # Log startup information
+        log_startup_info()
+        
+        # Setup signal handlers for graceful shutdown
+        def signal_handler(signum, frame):
+            logger.info(f"Received signal {signum}, initiating graceful shutdown...")
+            log_shutdown_info()
+            sys.exit(0)
+        
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+        
         asyncio.run(run_bot())
     except KeyboardInterrupt:
         logger.info("Bot interrupted by user")
+        log_shutdown_info()
     except Exception as e:
         logger.error(f"Failed to start bot: {e}")
+        log_shutdown_info()
         sys.exit(1)
+    finally:
+        logger.info("Bot shutdown completed")
 
 
 if __name__ == "__main__":
