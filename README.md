@@ -4,16 +4,23 @@ A comprehensive, production-ready async Telegram bot template built with Python,
 
 ## ✨ Features
 
-- **🔄 Dual Mode Support**: Both polling and webhook modes
-- **⚡ Async/Await**: Fully asynchronous for high performance
-- **🏗️ Highly Modular Architecture**: Component-based design with clear separation of concerns
-- **🛡️ Security Features**: Rate limiting, admin controls, input validation
-- **📊 Database Integration**: SQLite with async support for user management
-- **🔧 Configuration Management**: Environment-based configuration with validation
-- **📝 Comprehensive Logging**: Structured logging with file and console output
-- **🚀 Production Ready**: Error handling, graceful shutdown, health checks
-- **🛠️ Developer Friendly**: Type hints, documentation, CLI tools, and utilities
-- **🧩 Component Registry**: Dynamic module loading and management
+### 🎯 **Simplicity First**
+- **Single entry point**: Just run `uv run python main.py`
+- **Zero configuration complexity**: Everything configured via `.env` file
+- **uv-only dependency management**: No pip, no virtual env hassles
+
+### 🏗️ **Modular Architecture**
+- Clean separation of concerns with `core/`, `bot/`, `services/`, `utils/`
+- Easy to extend and customize
+- Well-organized codebase for maintainability
+
+### 🚀 **Production Ready**
+- **Dual mode support**: Polling and Webhook modes
+- **Async/await**: Built on python-telegram-bot v22+ with full async support
+- **Database integration**: SQLite with async operations
+- **Enhanced logging**: Structured logging with toggle support
+- **Error handling**: Comprehensive error handling and recovery
+- **Rate limiting**: Built-in rate limiting and admin controls
 
 ## 🏗️ Modular Project Structure
 
@@ -58,47 +65,29 @@ A comprehensive, production-ready async Telegram bot template built with Python,
 
 ## 🚀 Quick Start
 
-### 1. Clone and Setup
+1. **Clone and setup:**
+   ```bash
+   git clone <repository-url>
+   cd Python-Telegram-Bot-Template
+   ```
 
-```bash
-# Clone the repository
-git clone <your-repo-url>
-cd Python-Telegram-Bot-Template
+2. **Install dependencies with uv:**
+   ```bash
+   uv sync
+   ```
 
-# Install dependencies using uv
-uv sync
-```
+3. **Configure your bot:**
+   ```bash
+   cp .env.example .env
+   # Edit .env and add your BOT_TOKEN
+   ```
 
-### 2. Configure Environment
+4. **Run your bot:**
+   ```bash
+   uv run python main.py
+   ```
 
-```bash
-# Copy environment template
-cp .env.example .env
-
-# Edit .env with your bot token and settings
-```
-
-### 3. Get Bot Token
-
-1. Message [@BotFather](https://t.me/BotFather) on Telegram
-2. Create a new bot with `/newbot`
-3. Copy the bot token to your `.env` file
-
-### 4. Run the Bot
-
-```bash
-# Activate virtual environment
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Simple run
-python run.py
-
-# Using CLI (recommended)
-python cli.py --mode polling
-
-# Specific mode
-python cli.py --mode webhook
-```
+That's it! Your bot is now running with the configuration from your `.env` file.
 
 ## ⚙️ Configuration
 

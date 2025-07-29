@@ -1,5 +1,7 @@
 # 🤖 Async Telegram Bot Template - Quick Start Guide
 
+> **Simplicity First**: This template prioritizes ease of use. Just one command to run your bot!
+
 ## 🚀 Getting Started
 
 ### 1. Setup Environment
@@ -20,28 +22,16 @@ uv add package_name
 
 ### 3. Run the Bot
 ```bash
-# Run with default mode (from .env)
+# Simply run the bot (reads configuration from .env)
 uv run python main.py
 
-# Run in specific mode
-uv run python main.py --mode polling
-uv run python main.py --mode webhook
-
-# Alternative entry points
-uv run python cli.py --mode polling
-uv run python run.py
-
-# Get help
-uv run python main.py --help
+# That's it! The bot will start in the mode specified in your .env file
 ```
 
 ## 📁 Project Structure
 
 ```
-├── main.py              # Main entry point (uses CLI)
-├── cli.py               # Command-line interface
-├── run.py               # Simple run script
-├── bot.py               # Alternative entry point
+├── main.py              # Single entry point - just run this!
 ├── core/                # Core infrastructure
 │   ├── config.py        # Configuration management
 │   ├── runner.py        # Unified bot runner
@@ -63,14 +53,15 @@ uv run python main.py --help
 │   ├── formatters.py    # Text formatting utilities
 │   ├── keyboards.py     # Keyboard builders
 │   └── validators.py    # Input validation
-├── examples/            # Example scripts
+├── examples/            # Example scripts and bots
+│   ├── example_bot.py   # Extended bot example
 │   ├── logging_demo.py  # Logging features demo
 │   └── logging_toggle_demo.py # Logging toggle demo
 ├── scripts/             # Utility scripts
 │   └── analyze_logs.py  # Log analysis tool
 ├── .env.example         # Environment variables template
 ├── .env                 # Your environment variables (create this)
-├── pyproject.toml       # Project dependencies
+├── pyproject.toml       # Project dependencies (uv managed)
 └── README.md            # Full documentation
 ```
 
