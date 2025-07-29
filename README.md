@@ -50,8 +50,6 @@ A comprehensive, production-ready async Telegram bot template built with Python,
 ├── 📄 run.py                  # Simple entry point
 ├── 📄 cli.py                  # Command line interface
 ├── 📄 project.py              # Project configuration & registry
-├── 📄 polling.py              # Polling mode entry point
-├── 📄 webhook.py              # Webhook mode entry point
 ├── 📄 example_bot.py          # Example implementation
 ├── 📄 .env.example            # Environment template
 ├── 📄 pyproject.toml          # Project dependencies
@@ -96,17 +94,10 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 python run.py
 
 # Using CLI (recommended)
-python cli.py run
+python cli.py --mode polling
 
 # Specific mode
-python cli.py run --mode polling
-python cli.py run --mode webhook
-
-# Test configuration
-python cli.py test
-
-# Validate environment
-python cli.py validate
+python cli.py --mode webhook
 ```
 
 ## ⚙️ Configuration
