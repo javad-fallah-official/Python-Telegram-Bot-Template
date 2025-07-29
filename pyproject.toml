@@ -1,7 +1,14 @@
 [project]
 name = "python-telegram-bot-template"
 version = "0.1.0"
-description = "Add your description here"
+description = "A comprehensive async Telegram bot template with polling/webhook support, modular architecture, and production-ready features"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "aiohttp>=3.12.15",
+    "aiosqlite>=0.21.0",
+    "fastapi>=0.116.1",
+    "python-dotenv>=1.1.1",
+    "python-telegram-bot[all]>=22.3",
+    "uvicorn>=0.35.0",
+]
