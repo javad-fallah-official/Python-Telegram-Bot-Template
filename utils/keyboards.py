@@ -3,7 +3,7 @@ Keyboard building utilities.
 """
 
 from typing import List
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 
 
 class KeyboardBuilder:
@@ -62,3 +62,26 @@ class KeyboardBuilder:
             )
         
         return InlineKeyboardMarkup([buttons])
+
+
+# Standalone functions for easier usage
+def create_inline_keyboard(buttons: List[List[tuple]]) -> InlineKeyboardMarkup:
+    """Create inline keyboard from button data."""
+    keyboard = []
+    for row in buttons:
+        keyboard_row = []
+        for text, callback_data in row:
+            keyboard_row.append(InlineKeyboardButton(text, callback_data=callback_data))
+        keyboard.append(keyboard_row)
+    return InlineKeyboardMarkup(keyboard)
+
+
+def create_reply_keyboard(buttons: List[List[str]], resize_keyboard: bool = True, one_time_keyboard: bool = False) -> ReplyKeyboardMarkup:
+    """Create reply keyboard from button text."""
+    keyboard = []
+    for row in buttons:
+        keyboard_row = []
+        for text in row:
+            keyboard_row.append(KeyboardButton(text))
+        keyboard.append(keyboard_row)
+    return ReplyKeyboardMarkup(keyboard, resize_keyboard=resize_keyboard, one_time_keyboard=one_time_keyboard)

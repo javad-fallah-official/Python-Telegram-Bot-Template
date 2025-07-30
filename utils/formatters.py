@@ -42,3 +42,36 @@ class MessageFormatter:
             hours = seconds // 3600
             minutes = (seconds % 3600) // 60
             return f"{hours}h {minutes}m"
+
+
+# Standalone functions for easier usage
+def format_user(user) -> str:
+    """Format user object to string."""
+    if hasattr(user, 'first_name'):
+        name = user.first_name
+        if hasattr(user, 'last_name') and user.last_name:
+            name += f" {user.last_name}"
+        if hasattr(user, 'username') and user.username:
+            name += f" (@{user.username})"
+        return name
+    elif hasattr(user, 'username') and user.username:
+        return f"@{user.username}"
+    else:
+        return f"User {user.id}"
+
+
+def format_datetime(dt: datetime, format_str: str = "%Y-%m-%d %H:%M:%S") -> str:
+    """Format datetime to string."""
+    return dt.strftime(format_str)
+
+
+def format_file_size(size_bytes: int) -> str:
+    """Format file size in bytes to human readable format."""
+    if size_bytes < 1024:
+        return f"{size_bytes} B"
+    elif size_bytes < 1024 * 1024:
+        return f"{size_bytes / 1024:.1f} KB"
+    elif size_bytes < 1024 * 1024 * 1024:
+        return f"{size_bytes / (1024 * 1024):.1f} MB"
+    else:
+        return f"{size_bytes / (1024 * 1024 * 1024):.1f} GB"

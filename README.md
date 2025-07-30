@@ -4,23 +4,16 @@ A comprehensive, production-ready async Telegram bot template built with Python,
 
 ## ✨ Features
 
-### 🎯 **Simplicity First**
-- **Single entry point**: Just run `uv run python main.py`
-- **Zero configuration complexity**: Everything configured via `.env` file
-- **uv-only dependency management**: No pip, no virtual env hassles
-
-### 🏗️ **Modular Architecture**
-- Clean separation of concerns with `core/`, `bot/`, `services/`, `utils/`
-- Easy to extend and customize
-- Well-organized codebase for maintainability
-
-### 🚀 **Production Ready**
-- **Dual mode support**: Polling and Webhook modes
-- **Async/await**: Built on python-telegram-bot v22+ with full async support
-- **Database integration**: SQLite with async operations
-- **Enhanced logging**: Structured logging with toggle support
-- **Error handling**: Comprehensive error handling and recovery
-- **Rate limiting**: Built-in rate limiting and admin controls
+- **🔄 Dual Mode Support**: Both polling and webhook modes
+- **⚡ Async/Await**: Fully asynchronous for high performance
+- **🏗️ Highly Modular Architecture**: Component-based design with clear separation of concerns
+- **🛡️ Security Features**: Rate limiting, admin controls, input validation
+- **📊 Database Integration**: SQLite with async support for user management
+- **🔧 Configuration Management**: Environment-based configuration with validation
+- **📝 Comprehensive Logging**: Structured logging with file and console output
+- **🚀 Production Ready**: Error handling, graceful shutdown, health checks
+- **🛠️ Developer Friendly**: Type hints, documentation, CLI tools, and utilities
+- **🧩 Component Registry**: Dynamic module loading and management
 
 ## 🏗️ Modular Project Structure
 
@@ -57,6 +50,8 @@ A comprehensive, production-ready async Telegram bot template built with Python,
 ├── 📄 run.py                  # Simple entry point
 ├── 📄 cli.py                  # Command line interface
 ├── 📄 project.py              # Project configuration & registry
+├── 📄 polling.py              # Polling mode entry point
+├── 📄 webhook.py              # Webhook mode entry point
 ├── 📄 example_bot.py          # Example implementation
 ├── 📄 .env.example            # Environment template
 ├── 📄 pyproject.toml          # Project dependencies
@@ -65,29 +60,54 @@ A comprehensive, production-ready async Telegram bot template built with Python,
 
 ## 🚀 Quick Start
 
-1. **Clone and setup:**
-   ```bash
-   git clone <repository-url>
-   cd Python-Telegram-Bot-Template
-   ```
+### 1. Clone and Setup
 
-2. **Install dependencies with uv:**
-   ```bash
-   uv sync
-   ```
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd Python-Telegram-Bot-Template
 
-3. **Configure your bot:**
-   ```bash
-   cp .env.example .env
-   # Edit .env and add your BOT_TOKEN
-   ```
+# Install dependencies using uv
+uv sync
+```
 
-4. **Run your bot:**
-   ```bash
-   uv run python main.py
-   ```
+### 2. Configure Environment
 
-That's it! Your bot is now running with the configuration from your `.env` file.
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Edit .env with your bot token and settings
+```
+
+### 3. Get Bot Token
+
+1. Message [@BotFather](https://t.me/BotFather) on Telegram
+2. Create a new bot with `/newbot`
+3. Copy the bot token to your `.env` file
+
+### 4. Run the Bot
+
+```bash
+# Activate virtual environment
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Simple run
+python run.py
+
+# Using CLI (recommended)
+python cli.py run
+
+# Specific mode
+python cli.py run --mode polling
+python cli.py run --mode webhook
+
+# Test configuration
+python cli.py test
+
+# Validate environment
+python cli.py validate
+```
 
 ## ⚙️ Configuration
 
@@ -261,103 +281,6 @@ WEBHOOK_URL=https://abc123.ngrok.io
 4. Update `WEBHOOK_URL` with your domain
 5. Set `BOT_MODE=webhook`
 
-## 📊 Logging
-
-The template includes a comprehensive logging system with multiple output formats and advanced features:
-
-### Logging Toggle
-
-You can easily enable or disable the entire logging system via environment variable:
-
-```bash
-# Enable logging (default)
-LOGGING_ENABLED=true
-
-# Disable logging completely
-LOGGING_ENABLED=false
-```
-
-When `LOGGING_ENABLED=false`:
-- ❌ No log files are created
-- ❌ No console logging output
-- ❌ All logging functions become no-ops
-- ✅ Better performance (no I/O overhead)
-- ✅ Useful for production environments where external logging is used
-
-### Log Files
-
-All logs are stored in the `logs/` directory (when logging is enabled):
-
-- **`bot.log`** - Main application log with detailed information
-- **`errors.log`** - Error-only log for quick issue identification  
-- **`bot.json`** - Structured JSON logs for analysis and monitoring
-- **`debug.log`** - Detailed debug information (only in debug mode)
-
-### Log Features
-
-- **Colored Console Output** - Easy-to-read colored logs in the terminal
-- **Log Rotation** - Automatic rotation when files reach size limits
-- **Structured Logging** - JSON format with user IDs, commands, and context
-- **Performance Tracking** - Automatic timing of operations
-- **Security Logging** - Track unauthorized access attempts
-- **User Action Logging** - Track all user interactions with context
-
-### Using Enhanced Logging
-
-```python
-from core.logger import get_logger, log_user_action, log_error, log_performance
-from utils.logging_utils import log_command_execution, LogContext
-
-# Get a logger
-logger = get_logger('my_module')
-
-# Log user actions with context
-log_user_action(user_id=123, action='custom_command', details='Additional info')
-
-# Log errors with context
-try:
-    # Some operation
-    pass
-except Exception as e:
-    log_error(e, 'operation_context', user_id=123)
-
-# Log performance metrics
-log_performance('database_query', 0.150, {'query_type': 'SELECT'})
-
-# Use decorators for automatic logging
-@log_command_execution('my_command')
-async def my_command_handler(update, context):
-    # Command logic here
-    pass
-
-# Use context manager for operation timing
-async with LogContext('complex_operation', extra_data={'param': 'value'}):
-    # Your operation here
-    pass
-```
-
-### Log Analysis
-
-Analyze your bot's performance and usage with the built-in log analyzer:
-
-```bash
-# Analyze last 24 hours
-python scripts/analyze_logs.py
-
-# Analyze last 7 days  
-python scripts/analyze_logs.py --hours 168
-
-# Save report to file
-python scripts/analyze_logs.py --output report.txt
-```
-
-The analyzer provides:
-- User activity statistics
-- Command usage patterns  
-- Performance metrics
-- Error analysis
-- Hourly activity distribution
-
 ## 📊 Monitoring
 
 ### Health Check
@@ -366,9 +289,13 @@ When running in webhook mode, access:
 - `GET /health` - Health check endpoint
 - `GET /` - Basic info endpoint
 
-### Log Levels
+### Logs
 
-Supported log levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+Logs are written to:
+- Console (stdout)
+- `bot.log` file
+
+Log levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
 
 ## 🛡️ Security Features
 

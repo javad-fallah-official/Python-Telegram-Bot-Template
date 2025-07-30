@@ -44,7 +44,7 @@ class ExampleBot:
         for handler in handlers:
             self.application.add_handler(handler)
     
-    @rate_limit(max_calls=5, window=60)
+    @rate_limit(max_requests=5, window_seconds=60)
     @log_user_activity
     async def weather_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Weather command with rate limiting."""
@@ -57,7 +57,7 @@ class ExampleBot:
         
         await update.message.reply_text(message, parse_mode='MarkdownV2')
     
-    @rate_limit(max_calls=10, window=60)
+    @rate_limit(max_requests=10, window_seconds=60)
     @log_user_activity
     async def joke_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Random joke command."""
@@ -137,7 +137,7 @@ async def main():
         example_bot = ExampleBot()
         await example_bot.setup()
         
-        from main import BotRunner
+        from core.runner import BotRunner
         runner = BotRunner(example_bot.application)
         await runner.start()
         

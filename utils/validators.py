@@ -23,5 +23,8 @@ class Validator:
     @staticmethod
     def is_valid_phone(phone: str) -> bool:
         """Validate phone number (basic validation)."""
-        pattern = r'^\+?[1-9]\d{1,14}$'
-        return re.match(pattern, phone.replace(' ', '').replace('-', '')) is not None
+        # Remove spaces and dashes
+        clean_phone = phone.replace(' ', '').replace('-', '')
+        # Must be at least 7 digits, can start with + followed by country code
+        pattern = r'^\+?[1-9]\d{6,14}$'
+        return re.match(pattern, clean_phone) is not None

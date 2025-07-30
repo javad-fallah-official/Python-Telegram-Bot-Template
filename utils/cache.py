@@ -52,3 +52,29 @@ class AsyncCache:
         ]
         for key in expired_keys:
             del self.cache[key]
+
+
+class MemoryCache:
+    """Simple synchronous memory cache for testing."""
+    
+    def __init__(self):
+        self.cache: Dict[str, Any] = {}
+    
+    def get(self, key: str, default: Any = None) -> Any:
+        """Get value from cache."""
+        return self.cache.get(key, default)
+    
+    def set(self, key: str, value: Any) -> None:
+        """Set value in cache."""
+        self.cache[key] = value
+    
+    def delete(self, key: str) -> bool:
+        """Delete value from cache."""
+        if key in self.cache:
+            del self.cache[key]
+            return True
+        return False
+    
+    def clear(self) -> None:
+        """Clear all cache."""
+        self.cache.clear()
