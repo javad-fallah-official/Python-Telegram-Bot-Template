@@ -8,7 +8,7 @@ A comprehensive, production-ready async Telegram bot template built with Python,
 - **⚡ Async/Await**: Fully asynchronous for high performance
 - **🏗️ Highly Modular Architecture**: Component-based design with clear separation of concerns
 - **🛡️ Security Features**: Rate limiting, admin controls, input validation
-- **📊 Database Integration**: SQLite with async support for user management
+- **📊 Database Integration**: SQLite and PostgreSQL support with switchable backends
 - **🔧 Configuration Management**: Environment-based configuration with validation
 - **📝 Comprehensive Logging**: Structured logging with file and console output
 - **🚀 Production Ready**: Error handling, graceful shutdown, health checks
@@ -21,7 +21,9 @@ A comprehensive, production-ready async Telegram bot template built with Python,
 ├── 📁 core/                    # Core functionality
 │   ├── __init__.py            # Core package initialization
 │   ├── config.py              # Configuration management
-│   ├── database.py            # Database operations
+│   ├── database.py            # SQLite database operations
+│   ├── postgres.py            # PostgreSQL database operations
+│   ├── db_factory.py          # Database factory and switching logic
 │   ├── logger.py              # Logging configuration
 │   └── middleware.py          # Middleware and decorators
 ├── 📁 bot/                     # Bot application layer
@@ -52,7 +54,11 @@ A comprehensive, production-ready async Telegram bot template built with Python,
 ├── 📄 project.py              # Project configuration & registry
 ├── 📄 polling.py              # Polling mode entry point
 ├── 📄 webhook.py              # Webhook mode entry point
-├── 📄 example_bot.py          # Example implementation
+├── 📁 examples/               # Example scripts and demos
+│   ├── example_bot.py         # Example implementation
+│   ├── database_switching_demo.py # Database switching demo
+│   ├── postgresql_example.py  # PostgreSQL usage example
+│   └── logging_demo.py        # Logging features demo
 ├── 📄 .env.example            # Environment template
 ├── 📄 pyproject.toml          # Project dependencies
 └── 📄 README.md               # Documentation
@@ -124,6 +130,7 @@ python cli.py validate
 | `WEBHOOK_HOST` | Host for webhook server | `0.0.0.0` | ❌ |
 | `ADMIN_USER_IDS` | Comma-separated admin user IDs | - | ❌ |
 | `DATABASE_URL` | Database connection string | `sqlite:///bot.db` | ❌ |
+| `DATABASE_TYPE` | Database type: `auto`, `sqlite`, `postgresql` | `auto` | ❌ |
 | `DEBUG` | Enable debug mode | `false` | ❌ |
 | `LOG_LEVEL` | Logging level | `INFO` | ❌ |
 
@@ -134,6 +141,7 @@ BOT_TOKEN=1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
 BOT_USERNAME=my_awesome_bot
 BOT_MODE=polling
 ADMIN_USER_IDS=123456789,987654321
+DATABASE_TYPE=auto
 DEBUG=true
 LOG_LEVEL=INFO
 ```
@@ -196,6 +204,45 @@ await db.log_activity(user.id, 'command_used', '/start')
 # Get user
 user_data = await db.get_user(user.id)
 ```
+
+### Database Switching
+
+The template supports both SQLite and PostgreSQL databases with easy switching via environment variables:
+
+```env
+# Auto-detect database type from URL (default)
+DATABASE_TYPE=auto
+DATABASE_URL=sqlite:///bot.db  # Uses SQLite
+
+# Force SQLite (regardless of URL)
+DATABASE_TYPE=sqlite
+DATABASE_URL=postgresql://user:pass@localhost/db  # Still uses SQLite
+
+# Force PostgreSQL (regardless of URL)
+DATABASE_TYPE=postgresql
+DATABASE_URL=simple.db  # Still uses PostgreSQL
+```
+
+#### PostgreSQL Setup
+
+1. Install PostgreSQL dependencies:
+```bash
+uv add asyncpg
+```
+
+2. Configure PostgreSQL connection:
+```env
+DATABASE_TYPE=postgresql
+DATABASE_URL=postgresql://username:password@localhost:5432/database_name
+```
+
+3. The bot will automatically create tables and handle connections.
+
+#### Database Examples
+
+See the examples directory for practical usage:
+- `examples/database_switching_demo.py` - Complete switching demonstration
+- `examples/postgresql_example.py` - PostgreSQL-specific features
 
 ### Using Utilities
 

@@ -35,7 +35,9 @@ uv run python main.py
 ├── core/                # Core infrastructure
 │   ├── config.py        # Configuration management
 │   ├── runner.py        # Unified bot runner
-│   ├── database.py      # Async SQLite operations
+│   ├── database.py      # SQLite database operations
+│   ├── postgres.py      # PostgreSQL database operations
+│   ├── db_factory.py    # Database factory and switching logic
 │   ├── logger.py        # Enhanced logging system
 │   └── middleware.py    # Rate limiting, admin checks
 ├── bot/                 # Bot application layer
@@ -55,6 +57,8 @@ uv run python main.py
 │   └── validators.py    # Input validation
 ├── examples/            # Example scripts and bots
 │   ├── example_bot.py   # Extended bot example
+│   ├── database_switching_demo.py # Database switching demo
+│   ├── postgresql_example.py # PostgreSQL usage example
 │   ├── logging_demo.py  # Logging features demo
 │   └── logging_toggle_demo.py # Logging toggle demo
 ├── scripts/             # Utility scripts
@@ -84,12 +88,48 @@ LOG_LEVEL=INFO
 LOGGING_ENABLED=true
 ADMIN_USER_IDS=123456789,987654321
 DATABASE_URL=bot.db
+DATABASE_TYPE=auto
 
 # Webhook specific (only needed for webhook mode)
 WEBHOOK_URL=https://yourdomain.com
 WEBHOOK_SECRET_TOKEN=your_secret_token
 WEBHOOK_HOST=0.0.0.0
 WEBHOOK_PORT=8000
+```
+
+## 🗄️ Database Configuration
+
+The template supports both SQLite and PostgreSQL with easy switching:
+
+### Database Types
+- **`DATABASE_TYPE=auto`** (default): Auto-detect from DATABASE_URL
+- **`DATABASE_TYPE=sqlite`**: Force SQLite usage
+- **`DATABASE_TYPE=postgresql`**: Force PostgreSQL usage
+
+### Examples
+
+**SQLite (default):**
+```env
+DATABASE_TYPE=auto
+DATABASE_URL=bot.db
+```
+
+**PostgreSQL:**
+```env
+DATABASE_TYPE=postgresql
+DATABASE_URL=postgresql://username:password@localhost:5432/database_name
+```
+
+**Force SQLite (even with PostgreSQL URL):**
+```env
+DATABASE_TYPE=sqlite
+DATABASE_URL=postgresql://user:pass@localhost/db  # Ignored, uses SQLite
+```
+
+### Quick Test
+```bash
+# Test database switching
+uv run python examples/database_switching_demo.py
 ```
 
 ## 🛠️ Adding Custom Features
@@ -111,12 +151,13 @@ application.add_handler(CommandHandler("mycommand", my_command))
 
 ### 2. Use Database
 ```python
-from database import Database
+from core.db_factory import DatabaseFactory
 
-db = Database()
+# Create database instance (automatically uses correct type)
+db = DatabaseFactory.create_database()
 await db.connect()
 
-# Save user
+# Save user (works with both SQLite and PostgreSQL)
 await db.save_user({
     'id': user.id,
     'username': user.username,
@@ -207,11 +248,12 @@ uv sync
 ## 🎯 Next Steps
 
 1. **Customize handlers.py** - Add your bot's specific commands
-2. **Extend database.py** - Add tables for your bot's data
-3. **Configure middleware.py** - Adjust rate limits and security
-4. **Update utils.py** - Add utility functions for your use case
-5. **Set up monitoring** - Add health checks and metrics
-6. **Deploy** - Choose your deployment strategy
+2. **Configure database** - Choose SQLite or PostgreSQL via `DATABASE_TYPE`
+3. **Extend database.py** - Add tables for your bot's data
+4. **Configure middleware.py** - Adjust rate limits and security
+5. **Update utils.py** - Add utility functions for your use case
+6. **Set up monitoring** - Add health checks and metrics
+7. **Deploy** - Choose your deployment strategy
 
 ## 🆘 Troubleshooting
 
@@ -221,6 +263,7 @@ uv sync
 2. **BOT_TOKEN errors**: Ensure your `.env` file has the correct token
 3. **Webhook issues**: Check that your WEBHOOK_URL is accessible from the internet
 4. **Database errors**: Ensure the database file is writable
+5. **PostgreSQL errors**: Install `asyncpg` with `uv add asyncpg` for PostgreSQL support
 
 ### Getting Help
 
