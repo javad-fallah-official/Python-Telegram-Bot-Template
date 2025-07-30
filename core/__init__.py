@@ -1,29 +1,27 @@
-"""
-Core package initialization.
-"""
+"""Core modules for the Telegram bot."""
 
 from .config import Config
-from .database import Database
-from .logger import setup_logging
-from .middleware import (
-    admin_required, 
-    rate_limit, 
-    log_user_activity, 
-    logging_middleware, 
-    security_middleware,
-    session_manager,
-    RateLimiter
-)
+from .logger import BotLogger, get_logger
+from .db_factory import UnifiedDatabase, DatabaseFactory
+from .database import Database  # Keep for backward compatibility
+from .postgres import PostgreSQLDatabase
+from .middleware import RateLimiter, admin_required, rate_limit
+from .runner import BotRunner
+
+# Use unified database as default
+db = UnifiedDatabase()
 
 __all__ = [
-    "Config", 
-    "Database", 
-    "setup_logging", 
-    "admin_required", 
-    "rate_limit", 
-    "log_user_activity", 
-    "logging_middleware", 
-    "security_middleware",
-    "session_manager",
-    "RateLimiter"
+    'Config',
+    'BotLogger',
+    'get_logger',
+    'UnifiedDatabase',
+    'DatabaseFactory',
+    'Database',
+    'PostgreSQLDatabase',
+    'RateLimiter',
+    'admin_required',
+    'rate_limit',
+    'BotRunner',
+    'db'
 ]

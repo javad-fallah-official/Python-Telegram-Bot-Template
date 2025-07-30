@@ -35,6 +35,7 @@ class Config:
     ]
     
     # Database
+    DATABASE_TYPE: str = os.getenv("DATABASE_TYPE", "auto").lower()  # auto, sqlite, postgresql
     DATABASE_URL: str = os.getenv("DATABASE_URL", "bot.db")
     
     @classmethod
@@ -45,6 +46,9 @@ class Config:
         
         if cls.BOT_MODE not in ["polling", "webhook"]:
             raise ValueError("BOT_MODE must be 'polling' or 'webhook'")
+        
+        if cls.DATABASE_TYPE not in ["auto", "sqlite", "postgresql"]:
+            raise ValueError("DATABASE_TYPE must be 'auto', 'sqlite', or 'postgresql'")
         
         if cls.BOT_MODE == "webhook":
             if not cls.WEBHOOK_URL:
