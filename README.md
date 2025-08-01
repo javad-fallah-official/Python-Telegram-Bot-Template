@@ -203,7 +203,7 @@ user_data = await db.get_user(user.id)
 from utils.formatters import MessageFormatter
 from utils.keyboards import KeyboardBuilder
 from utils.cache import AsyncCache
-from telegram import InlineKeyboardButton
+from aiogram.types import InlineKeyboardButton
 
 # Format message
 formatted = MessageFormatter.escape_markdown("Special *text*")

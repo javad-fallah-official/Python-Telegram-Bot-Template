@@ -136,8 +136,8 @@ uv run python examples/database_switching_demo.py
 
 ### 1. Add New Commands
 ```python
-from telegram import Update
-from telegram.ext import CommandHandler, ContextTypes
+from aiogram.types import Message
+from aiogram.filters import Command
 from middleware import rate_limit, log_user_activity
 
 @rate_limit(max_calls=5, window=60)

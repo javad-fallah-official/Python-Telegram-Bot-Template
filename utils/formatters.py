@@ -4,7 +4,7 @@ Message formatting utilities.
 
 import re
 from datetime import datetime
-from telegram.constants import ParseMode
+from aiogram.enums import ParseMode
 
 
 class MessageFormatter:

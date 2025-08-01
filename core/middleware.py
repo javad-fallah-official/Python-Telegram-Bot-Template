@@ -2,10 +2,9 @@
 
 import logging
 import time
-from typing import Dict, Set
+from typing import Dict, Set, Callable, Any, Awaitable
 from functools import wraps
-from telegram import Update
-from telegram.ext import ContextTypes
+from aiogram.types import Message, CallbackQuery
 from .config import Config
 
 logger = logging.getLogger(__name__)
@@ -48,17 +47,17 @@ rate_limiter = RateLimiter()
 def admin_required(func):
     """Decorator to require admin privileges for a command."""
     @wraps(func)
-    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        user = update.effective_user
+    async def wrapper(message: Message):
+        user = message.from_user
         
         if not Config.is_admin(user.id):
             logger.warning(f"Non-admin user {user.id} tried to access admin command")
-            await update.message.reply_text(
+            await message.answer(
                 "❌ You don't have permission to use this command."
             )
             return
         
-        return await func(update, context)
+        return await func(message)
     
     return wrapper
 
@@ -67,20 +66,20 @@ def rate_limit(max_requests: int = 5, window_seconds: int = 60):
     """Decorator to rate limit commands."""
     def decorator(func):
         @wraps(func)
-        async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
-            user = update.effective_user
+        async def wrapper(message: Message):
+            user = message.from_user
             
             # Create rate limiter for this command
             limiter = RateLimiter(max_requests, window_seconds)
             
             if not limiter.is_allowed(user.id):
                 logger.warning(f"Rate limit exceeded for user {user.id}")
-                await update.message.reply_text(
+                await message.answer(
                     f"⏰ Rate limit exceeded. Please wait {window_seconds} seconds before trying again."
                 )
                 return
             
-            return await func(update, context)
+            return await func(message)
         
         return wrapper
     
@@ -90,55 +89,59 @@ def rate_limit(max_requests: int = 5, window_seconds: int = 60):
 def log_user_activity(func):
     """Decorator to log user activity."""
     @wraps(func)
-    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        user = update.effective_user
-        command = update.message.text.split()[0] if update.message.text else "unknown"
+    async def wrapper(message: Message):
+        user = message.from_user
+        command = message.text.split()[0] if message.text else "unknown"
         
         logger.info(
             f"User activity - ID: {user.id}, Username: @{user.username or 'N/A'}, "
             f"Name: {user.full_name}, Command: {command}"
         )
         
-        return await func(update, context)
+        return await func(message)
     
     return wrapper
 
 
-async def logging_middleware(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Middleware for logging all updates."""
-    user = update.effective_user
-    chat = update.effective_chat
+async def logging_middleware(message: Message):
+    """Middleware for logging all messages."""
+    user = message.from_user
+    chat = message.chat
     
-    if update.message:
-        logger.debug(
-            f"Message from user {user.id} (@{user.username}) in chat {chat.id}: "
-            f"{update.message.text[:100]}..."
-        )
-    elif update.callback_query:
-        logger.debug(
-            f"Callback query from user {user.id} (@{user.username}): "
-            f"{update.callback_query.data}"
-        )
+    logger.debug(
+        f"Message from user {user.id} (@{user.username}) in chat {chat.id}: "
+        f"{message.text[:100] if message.text else 'Non-text message'}..."
+    )
 
 
-async def security_middleware(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def callback_logging_middleware(callback_query: CallbackQuery):
+    """Middleware for logging callback queries."""
+    user = callback_query.from_user
+    
+    logger.debug(
+        f"Callback query from user {user.id} (@{user.username}): "
+        f"{callback_query.data}"
+    )
+
+
+async def security_middleware(message: Message):
     """Middleware for basic security checks."""
-    user = update.effective_user
+    user = message.from_user
     
     # Check for banned users (you can implement your own logic)
     banned_users: Set[int] = set()  # Add banned user IDs here
     
     if user.id in banned_users:
         logger.warning(f"Banned user {user.id} tried to interact with bot")
-        return  # Don't process the update
+        return  # Don't process the message
     
     # Check for suspicious activity
-    if update.message and update.message.text:
+    if message.text:
         suspicious_patterns = ['spam', 'scam', 'hack']  # Add your patterns
-        text_lower = update.message.text.lower()
+        text_lower = message.text.lower()
         
         if any(pattern in text_lower for pattern in suspicious_patterns):
-            logger.warning(f"Suspicious message from user {user.id}: {update.message.text}")
+            logger.warning(f"Suspicious message from user {user.id}: {message.text}")
             # You can add additional actions here
 
 

@@ -6,7 +6,6 @@ from .db_factory import UnifiedDatabase, DatabaseFactory
 from .database import Database  # Keep for backward compatibility
 from .postgres import PostgreSQLDatabase
 from .middleware import RateLimiter, admin_required, rate_limit
-from .runner import BotRunner
 
 # Use unified database as default
 db = UnifiedDatabase()
@@ -22,6 +21,5 @@ __all__ = [
     'RateLimiter',
     'admin_required',
     'rate_limit',
-    'BotRunner',
     'db'
 ]

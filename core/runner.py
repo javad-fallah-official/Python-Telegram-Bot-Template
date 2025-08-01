@@ -1,128 +1,152 @@
-"""Unified bot runner for managing bot services."""
+"""Bot runner module for managing bot lifecycle and services."""
 
 import asyncio
 import signal
 import sys
 from typing import Optional
+from aiogram import Bot, Dispatcher
 
 from core.config import Config
 from core.logger import setup_logging, get_logger
 from utils.logging_utils import log_startup_info, log_shutdown_info
-from bot import create_bot, BotFactory
+from bot.factory import BotFactory
 from services.polling import create_polling_service
 from services.webhook import create_webhook_service
-from services.base import BotService
 
 logger = get_logger('runner')
 
 
 class BotRunner:
-    """Unified bot runner that manages different service modes."""
+    """Manages the bot lifecycle and services."""
     
     def __init__(self):
-        self.application = None
-        self.service: Optional[BotService] = None
-        self._running = False
+        self.bot: Optional[Bot] = None
+        self.dp: Optional[Dispatcher] = None
+        self.service = None
+        self._shutdown_event = asyncio.Event()
         self._setup_signal_handlers()
     
-    async def start(self, mode: Optional[str] = None) -> None:
-        """Start the bot in the specified mode."""
-        mode = mode or Config.BOT_MODE
+    def _setup_signal_handlers(self):
+        """Set up signal handlers for graceful shutdown."""
+        for sig in (signal.SIGTERM, signal.SIGINT):
+            signal.signal(sig, self._signal_handler)
+    
+    def _signal_handler(self, signum, frame):
+        """Handle shutdown signals."""
+        logger.info(f"Received signal {signum}, initiating shutdown...")
+        self._shutdown_event.set()
+    
+    async def initialize(self) -> None:
+        """Initialize the bot and its components."""
+        logger.info("Initializing bot...")
         
         try:
-            Config.validate()
+            # Create bot and dispatcher
+            self.bot, self.dp = BotFactory.create_bot()
             
-            logger.info("=" * 50)
-            logger.info("Starting Telegram Bot")
-            logger.info(f"Mode: {mode}")
-            logger.info(f"Debug: {Config.DEBUG}")
-            logger.info("=" * 50)
+            # Initialize bot
+            await BotFactory.initialize_bot(self.bot)
             
-            # Create and initialize bot
-            self.application = create_bot()
-            await BotFactory.initialize_bot(self.application)
-            
-            # Create appropriate service
-            if mode == "polling":
-                self.service = create_polling_service(self.application)
-            elif mode == "webhook":
-                self.service = create_webhook_service(self.application)[1]  # Get service, not app
-            else:
-                raise ValueError(f"Invalid bot mode: {mode}")
-            
-            self._running = True
-            
-            # Start the service
-            await self.service.start()
+            logger.info("Bot initialization completed successfully")
             
         except Exception as e:
-            logger.error(f"Failed to start bot: {e}")
-            await self.stop()
+            logger.error(f"Failed to initialize bot: {e}")
             raise
     
-    async def stop(self) -> None:
-        """Stop the bot gracefully."""
-        if not self._running:
-            return
+    async def start_polling(self) -> None:
+        """Start the bot in polling mode."""
+        if not self.bot or not self.dp:
+            await self.initialize()
         
-        logger.info("Stopping bot...")
-        self._running = False
+        logger.info("Starting bot in polling mode...")
+        
+        try:
+            self.service = create_polling_service(self.bot, self.dp)
+            
+            # Start polling in background
+            polling_task = asyncio.create_task(self.service.start())
+            
+            # Wait for shutdown signal
+            await self._shutdown_event.wait()
+            
+            # Cancel polling task
+            polling_task.cancel()
+            try:
+                await polling_task
+            except asyncio.CancelledError:
+                pass
+            
+        except Exception as e:
+            logger.error(f"Error in polling mode: {e}")
+            raise
+        finally:
+            await self.shutdown()
+    
+    async def start_webhook(self) -> None:
+        """Start the bot in webhook mode."""
+        if not self.bot or not self.dp:
+            await self.initialize()
+        
+        logger.info("Starting bot in webhook mode...")
+        
+        try:
+            app, self.service = create_webhook_service(self.bot, self.dp)
+            
+            # Start webhook in background
+            webhook_task = asyncio.create_task(self.service.start())
+            
+            # Wait for shutdown signal
+            await self._shutdown_event.wait()
+            
+            # Cancel webhook task
+            webhook_task.cancel()
+            try:
+                await webhook_task
+            except asyncio.CancelledError:
+                pass
+            
+        except Exception as e:
+            logger.error(f"Error in webhook mode: {e}")
+            raise
+        finally:
+            await self.shutdown()
+    
+    async def shutdown(self) -> None:
+        """Shutdown the bot gracefully."""
+        logger.info("Shutting down bot...")
         
         try:
             if self.service:
                 await self.service.stop()
             
-            if self.application:
-                await BotFactory.shutdown_bot(self.application)
+            if self.bot:
+                await BotFactory.shutdown_bot(self.bot)
             
-            logger.info("Bot stopped successfully")
+            logger.info("Bot shutdown completed successfully")
             
         except Exception as e:
-            logger.error(f"Error stopping bot: {e}")
-    
-    def _setup_signal_handlers(self) -> None:
-        """Set up signal handlers for graceful shutdown."""
-        def signal_handler(signum, frame):
-            logger.info(f"Received signal {signum}, initiating shutdown...")
-            self._running = False
-            
-            # Create task to stop the bot
-            try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    loop.create_task(self.stop())
-                else:
-                    asyncio.run(self.stop())
-            except RuntimeError:
-                # If no event loop is running, create a new one
-                asyncio.run(self.stop())
-        
-        # Register signal handlers
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
-        
-        if sys.platform != "win32":
-            signal.signal(signal.SIGHUP, signal_handler)
+            logger.error(f"Error during shutdown: {e}")
     
     @property
     def is_running(self) -> bool:
         """Check if the bot is running."""
-        return self._running and (self.service.is_running if self.service else False)
+        return not self._shutdown_event.is_set() and (self.service.is_running if self.service else False)
 
 
-async def run_bot(mode: Optional[str] = None) -> None:
-    """Run the bot with the specified mode."""
+async def run_bot() -> None:
+    """Run the bot based on configuration."""
     runner = BotRunner()
     
     try:
-        await runner.start(mode)
+        if Config.USE_WEBHOOK:
+            await runner.start_webhook()
+        else:
+            await runner.start_polling()
     except KeyboardInterrupt:
         logger.info("Bot stopped by user")
     except Exception as e:
-        logger.error(f"Fatal error: {e}")
-        sys.exit(1)
-    finally:
-        await runner.stop()
+        logger.error(f"Bot crashed: {e}")
+        raise
 
 
 def main() -> None:

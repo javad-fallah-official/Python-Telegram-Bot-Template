@@ -3,7 +3,7 @@ Keyboard building utilities.
 """
 
 from typing import List
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 
 
 class KeyboardBuilder:

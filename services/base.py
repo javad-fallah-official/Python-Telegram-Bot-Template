@@ -1,14 +1,15 @@
 """Base service interface for bot services."""
 
 from abc import ABC, abstractmethod
-from telegram.ext import Application
+from aiogram import Bot, Dispatcher
 
 
 class BotService(ABC):
     """Abstract base class for bot services."""
     
-    def __init__(self, application: Application):
-        self.application = application
+    def __init__(self, bot: Bot, dp: Dispatcher):
+        self.bot = bot
+        self.dp = dp
         self._running = False
     
     @property

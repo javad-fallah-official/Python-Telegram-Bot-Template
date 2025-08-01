@@ -4,16 +4,15 @@ Contains all message handlers for the Telegram bot.
 """
 
 import logging
-from telegram import Update
-from telegram.ext import ContextTypes
+from aiogram import types
 
 logger = logging.getLogger(__name__)
 
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_message(message: types.Message) -> None:
     """Handle regular text messages."""
-    user = update.effective_user
-    message_text = update.message.text
+    user = message.from_user
+    message_text = message.text
     
     logger.info(f"User {user.id} sent message: {message_text}")
     
@@ -24,38 +23,38 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         "Try using /help to see available commands!"
     )
     
-    await update.message.reply_html(response)
+    await message.answer(response)
 
 
-async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_photo(message: types.Message) -> None:
     """Handle photo messages."""
-    user = update.effective_user
+    user = message.from_user
     logger.info(f"User {user.id} sent a photo")
     
-    await update.message.reply_text(
+    await message.answer(
         "📸 Nice photo! I received your image.\n"
         "Photo handling features can be implemented here."
     )
 
 
-async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_document(message: types.Message) -> None:
     """Handle document messages."""
-    user = update.effective_user
-    document = update.message.document
+    user = message.from_user
+    document = message.document
     logger.info(f"User {user.id} sent document: {document.file_name}")
     
-    await update.message.reply_text(
+    await message.answer(
         f"📄 Document received: {document.file_name}\n"
         "Document processing features can be implemented here."
     )
 
 
-async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_voice(message: types.Message) -> None:
     """Handle voice messages."""
-    user = update.effective_user
+    user = message.from_user
     logger.info(f"User {user.id} sent a voice message")
     
-    await update.message.reply_text(
+    await message.answer(
         "🎤 Voice message received!\n"
         "Voice processing features can be implemented here."
     )

@@ -4,8 +4,8 @@ import logging
 import uvicorn
 from typing import Optional, Tuple
 from fastapi import FastAPI, Request, HTTPException, Header
-from telegram import Update
-from telegram.ext import Application
+from aiogram import Bot, Dispatcher
+from aiogram.types import Update
 from core.config import Config
 from .base import BotService
 
@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 class WebhookService(BotService):
     """FastAPI-based webhook service for Telegram bot."""
     
-    def __init__(self, application: Application):
-        super().__init__(application)
+    def __init__(self, bot: Bot, dp: Dispatcher):
+        super().__init__(bot, dp)
         self.app = FastAPI(
             title="Telegram Bot Webhook",
             description="Webhook server for Telegram bot",
@@ -41,10 +41,11 @@ class WebhookService(BotService):
                     raise HTTPException(status_code=403, detail="Invalid secret token")
             
             try:
-                update = Update.de_json(await request.json(), self.application.bot)
+                update_data = await request.json()
+                update = Update.model_validate(update_data, context={"bot": self.bot})
                 
                 if update:
-                    await self.application.process_update(update)
+                    await self.dp.feed_update(self.bot, update)
                     logger.debug(f"Processed webhook update: {update.update_id}")
                 else:
                     logger.warning("Received invalid update from webhook")
@@ -78,7 +79,7 @@ class WebhookService(BotService):
         try:
             webhook_url = f"{Config.WEBHOOK_URL}/webhook"
             
-            await self.application.bot.set_webhook(
+            await self.bot.set_webhook(
                 url=webhook_url,
                 secret_token=Config.WEBHOOK_SECRET_TOKEN if Config.WEBHOOK_SECRET_TOKEN else None,
                 drop_pending_updates=True
@@ -86,7 +87,7 @@ class WebhookService(BotService):
             
             logger.info(f"Webhook set successfully: {webhook_url}")
             
-            webhook_info = await self.application.bot.get_webhook_info()
+            webhook_info = await self.bot.get_webhook_info()
             logger.info(f"Webhook info: {webhook_info}")
             
         except Exception as e:
@@ -98,7 +99,6 @@ class WebhookService(BotService):
         logger.info("Starting webhook service...")
         
         try:
-            await self.application.start()
             await self.setup()
             
             config = uvicorn.Config(
@@ -131,7 +131,6 @@ class WebhookService(BotService):
         
         try:
             await self.cleanup()
-            await self.application.stop()
             logger.info("Webhook service stopped successfully")
             
         except Exception as e:
@@ -140,7 +139,7 @@ class WebhookService(BotService):
     async def cleanup(self) -> None:
         """Remove webhook from Telegram."""
         try:
-            await self.application.bot.delete_webhook(drop_pending_updates=True)
+            await self.bot.delete_webhook(drop_pending_updates=True)
             logger.info("Webhook removed successfully")
         except Exception as e:
             logger.error(f"Failed to remove webhook: {e}")
@@ -150,7 +149,7 @@ class WebhookService(BotService):
         return self.app
 
 
-def create_webhook_service(application: Application) -> Tuple[FastAPI, WebhookService]:
+def create_webhook_service(bot: Bot, dp: Dispatcher) -> Tuple[FastAPI, WebhookService]:
     """Create and configure webhook service."""
-    webhook_service = WebhookService(application)
+    webhook_service = WebhookService(bot, dp)
     return webhook_service.get_app(), webhook_service

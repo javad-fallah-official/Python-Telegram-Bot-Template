@@ -6,8 +6,7 @@ Provides convenient functions for common logging patterns.
 import time
 import functools
 from typing import Callable, Any, Dict, Optional
-from telegram import Update
-from telegram.ext import ContextTypes
+from aiogram.types import Update, Message
 from core.config import Config
 from core.logger import get_logger, log_user_action, log_error, log_performance
 
@@ -23,12 +22,12 @@ def log_command_execution(command_name: str = None):
     """
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
-        async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
+        async def wrapper(message: Message, *args, **kwargs):
             start_time = time.time()
             cmd_name = command_name or func.__name__.replace('_command', '').replace('_handler', '')
             
-            user = update.effective_user
-            chat_id = update.effective_chat.id if update.effective_chat else None
+            user = message.from_user
+            chat_id = message.chat.id
             
             try:
                 # Log command start
@@ -40,7 +39,7 @@ def log_command_execution(command_name: str = None):
                 )
                 
                 # Execute the command
-                result = await func(update, context, *args, **kwargs)
+                result = await func(message, *args, **kwargs)
                 
                 # Log successful completion
                 duration = time.time() - start_time
@@ -82,12 +81,11 @@ def log_message_processing(message_type: str = "message"):
     """
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
-        async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
+        async def wrapper(message: Message, *args, **kwargs):
             start_time = time.time()
             
-            user = update.effective_user
-            chat_id = update.effective_chat.id if update.effective_chat else None
-            message = update.effective_message
+            user = message.from_user
+            chat_id = message.chat.id
             
             try:
                 # Log message processing start
@@ -103,7 +101,7 @@ def log_message_processing(message_type: str = "message"):
                 )
                 
                 # Execute the handler
-                result = await func(update, context, *args, **kwargs)
+                result = await func(message, *args, **kwargs)
                 
                 # Log successful processing
                 duration = time.time() - start_time

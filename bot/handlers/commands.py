@@ -1,25 +1,21 @@
-"""
-Command handlers module.
-Contains all
-Command handlers for the Telegram bot.
-"""
+"""Command handlers for the Telegram bot."""
 
+import logging
 import time
-from telegram import Update
-from telegram.ext import ContextTypes
+from aiogram.types import Message
 from core.config import Config
-from core.logger import get_logger, log_user_action, log_error, log_performance, log_security_event
+from core.logger import log_user_action, log_performance, log_error
 
-logger = get_logger('commands')
+logger = logging.getLogger(__name__)
 
 
-async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def start_command(message: Message) -> None:
     """Handle the /start command."""
     start_time = time.time()
     
     try:
-        user = update.effective_user
-        chat_id = update.effective_chat.id
+        user = message.from_user
+        chat_id = message.chat.id
         
         # Log user action
         log_user_action(
@@ -41,7 +37,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         if Config.is_admin(user.id):
             welcome_message += "• /admin - Admin panel (admin only)\n"
         
-        await update.message.reply_text(welcome_message)
+        await message.answer(welcome_message)
         
         # Log performance
         duration = time.time() - start_time
@@ -54,11 +50,11 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         logger.info(f"Start command executed for user {user.id} ({user.first_name})")
         
     except Exception as e:
-        log_error(e, 'start_command', user_id=update.effective_user.id if update.effective_user else None)
-        await update.message.reply_text("❌ An error occurred while processing your request.")
+        log_error(e, 'start_command', user_id=message.from_user.id if message.from_user else None)
+        await message.answer("❌ An error occurred while processing your request.")
 
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def help_command(message: Message) -> None:
     """Handle the /help command."""
     help_text = (
         "🤖 <b>Bot Help</b>\n\n"
@@ -72,12 +68,12 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "Need more help? Contact the bot administrator."
     )
     
-    await update.message.reply_html(help_text)
+    await message.answer(help_text, parse_mode='HTML')
 
 
-async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def status_command(message: Message) -> None:
     """Handle the /status command."""
-    user = update.effective_user
+    user = message.from_user
     logger.info(f"User {user.id} requested bot status")
     
     status_message = (
@@ -89,42 +85,41 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         f"• Admin: {'Yes' if Config.is_admin(user.id) else 'No'}\n"
     )
     
-    await update.message.reply_html(status_message)
+    await message.answer(status_message, parse_mode='HTML')
 
 
-async def echo_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def echo_command(message: Message) -> None:
     """Handle the /echo command."""
-    user = update.effective_user
+    user = message.from_user
     
-    if not context.args:
-        await update.message.reply_text(
+    # Extract command arguments from message text
+    command_args = message.text.split()[1:] if message.text else []
+    
+    if not command_args:
+        await message.answer(
             "Please provide a message to echo!\n"
             "Usage: /echo <your message>"
         )
         return
     
-    message_to_echo = " ".join(context.args)
+    message_to_echo = " ".join(command_args)
     logger.info(f"User {user.id} used echo command: {message_to_echo}")
     
-    await update.message.reply_text(f"🔄 Echo: {message_to_echo}")
+    await message.answer(f"🔄 Echo: {message_to_echo}")
 
 
-async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def admin_command(message: Message) -> None:
     """Handle the /admin command (admin only)."""
     start_time = time.time()
     
     try:
-        user = update.effective_user
-        chat_id = update.effective_chat.id
+        user = message.from_user
+        chat_id = message.chat.id
         
         # Check admin permissions
         if not Config.is_admin(user.id):
-            log_security_event(
-                'unauthorized_admin_access',
-                user_id=user.id,
-                details=f"User {user.first_name} ({user.username}) attempted to access admin panel"
-            )
-            await update.message.reply_text("❌ You don't have permission to use this command.")
+            logger.warning(f"User {user.first_name} ({user.username}) attempted to access admin panel")
+            await message.answer("❌ You don't have permission to use this command.")
             return
         
         # Log admin action
@@ -146,7 +141,7 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             "• View logs in the logs/ directory\n"
         )
         
-        await update.message.reply_text(admin_message, parse_mode='Markdown')
+        await message.answer(admin_message, parse_mode='Markdown')
         
         # Log performance
         duration = time.time() - start_time
@@ -159,12 +154,12 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         logger.info(f"Admin panel accessed by user {user.id} ({user.first_name})")
         
     except Exception as e:
-        log_error(e, 'admin_command', user_id=update.effective_user.id if update.effective_user else None)
-        await update.message.reply_text("❌ An error occurred while processing your request.")
+        log_error(e, 'admin_command', user_id=message.from_user.id if message.from_user else None)
+        await message.answer("❌ An error occurred while processing your request.")
 
 
-async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def unknown_command(message: Message) -> None:
     """Handle unknown commands."""
-    await update.message.reply_text(
+    await message.answer(
         "❓ Unknown command. Use /help to see available commands."
     )

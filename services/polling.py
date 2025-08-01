@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from telegram.ext import Application
+from aiogram import Bot, Dispatcher
 from .base import BotService
 
 logger = logging.getLogger(__name__)
@@ -16,18 +16,14 @@ class PollingService(BotService):
         logger.info("Starting bot in polling mode...")
         
         try:
-            await self.application.start()
-            
-            await self.application.updater.start_polling(
-                drop_pending_updates=True,
-                allowed_updates=None
-            )
-            
             self._running = True
             logger.info("Bot started successfully in polling mode")
             
-            while self._running:
-                await asyncio.sleep(1)
+            # Start polling
+            await self.dp.start_polling(
+                self.bot,
+                drop_pending_updates=True
+            )
                 
         except Exception as e:
             logger.error(f"Error in polling mode: {e}")
@@ -44,16 +40,13 @@ class PollingService(BotService):
         self._running = False
         
         try:
-            if self.application.updater.running:
-                await self.application.updater.stop()
-            
-            await self.application.stop()
+            await self.dp.stop_polling()
             logger.info("Polling service stopped successfully")
             
         except Exception as e:
             logger.error(f"Error stopping polling service: {e}")
 
 
-def create_polling_service(application: Application) -> PollingService:
+def create_polling_service(bot: Bot, dp: Dispatcher) -> PollingService:
     """Create and configure polling service."""
-    return PollingService(application)
+    return PollingService(bot, dp)
