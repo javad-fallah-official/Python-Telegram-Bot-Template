@@ -33,7 +33,7 @@ class KeyboardBuilder:
             for button in footer_buttons:
                 menu.append([button])
         
-        return InlineKeyboardMarkup(menu)
+        return InlineKeyboardMarkup(inline_keyboard=menu)
     
     @staticmethod
     def pagination_keyboard(
@@ -47,21 +47,21 @@ class KeyboardBuilder:
         # Previous button
         if current_page > 1:
             buttons.append(
-                InlineKeyboardButton("◀️ Previous", callback_data=f"{callback_prefix}_{current_page - 1}")
+                InlineKeyboardButton(text="◀️ Previous", callback_data=f"{callback_prefix}_{current_page - 1}")
             )
         
         # Page info
         buttons.append(
-            InlineKeyboardButton(f"{current_page}/{total_pages}", callback_data="noop")
+            InlineKeyboardButton(text=f"{current_page}/{total_pages}", callback_data="noop")
         )
         
         # Next button
         if current_page < total_pages:
             buttons.append(
-                InlineKeyboardButton("Next ▶️", callback_data=f"{callback_prefix}_{current_page + 1}")
+                InlineKeyboardButton(text="Next ▶️", callback_data=f"{callback_prefix}_{current_page + 1}")
             )
         
-        return InlineKeyboardMarkup([buttons])
+        return InlineKeyboardMarkup(inline_keyboard=[buttons])
 
 
 # Standalone functions for easier usage
@@ -71,9 +71,9 @@ def create_inline_keyboard(buttons: List[List[tuple]]) -> InlineKeyboardMarkup:
     for row in buttons:
         keyboard_row = []
         for text, callback_data in row:
-            keyboard_row.append(InlineKeyboardButton(text, callback_data=callback_data))
+            keyboard_row.append(InlineKeyboardButton(text=text, callback_data=callback_data))
         keyboard.append(keyboard_row)
-    return InlineKeyboardMarkup(keyboard)
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
 def create_reply_keyboard(buttons: List[List[str]], resize_keyboard: bool = True, one_time_keyboard: bool = False) -> ReplyKeyboardMarkup:
@@ -82,6 +82,6 @@ def create_reply_keyboard(buttons: List[List[str]], resize_keyboard: bool = True
     for row in buttons:
         keyboard_row = []
         for text in row:
-            keyboard_row.append(KeyboardButton(text))
+            keyboard_row.append(KeyboardButton(text=text))
         keyboard.append(keyboard_row)
-    return ReplyKeyboardMarkup(keyboard, resize_keyboard=resize_keyboard, one_time_keyboard=one_time_keyboard)
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=resize_keyboard, one_time_keyboard=one_time_keyboard)

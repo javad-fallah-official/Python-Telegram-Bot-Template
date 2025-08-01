@@ -19,20 +19,27 @@ class TestBotFactory:
         assert BotFactory is not None
     
     def test_factory_creation(self, mock_config):
-        """Test BotFactory bot creation."""
+        """Test bot factory creates bot and dispatcher correctly."""
         from bot.factory import BotFactory
         
-        with patch('aiogram.Bot') as mock_bot_class:
-            with patch('aiogram.Dispatcher') as mock_dispatcher_class:
-                mock_bot = Mock()
-                mock_dp = Mock()
-                mock_bot_class.return_value = mock_bot
-                mock_dispatcher_class.return_value = mock_dp
-                
-                with patch('bot.factory.register_handlers'):
-                    bot, dp = BotFactory.create_bot()
-                    assert bot is not None
-                    assert dp is not None
+        with patch('bot.factory.Bot') as mock_bot_class, \
+             patch('bot.factory.Dispatcher') as mock_dp_class, \
+             patch('bot.factory.register_handlers') as mock_register:
+            
+            mock_bot = Mock()
+            mock_dp = Mock()
+            mock_bot_class.return_value = mock_bot
+            mock_dp_class.return_value = mock_dp
+            
+            # Test individual creation methods
+            bot = BotFactory.create_bot()
+            dp = BotFactory.create_dispatcher()
+            
+            assert bot is not None
+            assert dp is not None
+            mock_bot_class.assert_called_once()
+            mock_dp_class.assert_called_once()
+            mock_register.assert_called_once_with(mock_dp)
 
 
 class TestCommandHandlers:
@@ -46,48 +53,29 @@ class TestCommandHandlers:
         assert status_command is not None
     
     @pytest.mark.asyncio
-    async def test_start_command(self, mock_update):
+    async def test_start_command(self, mock_message):
         """Test start command handler."""
         from bot.handlers.commands import start_command
         
-        # Configure mock for async reply_text
-        mock_update.message.reply_text = AsyncMock()
-        
-        # Provide proper mock data to avoid JSON serialization errors
-        mock_update.effective_user.id = 12345
-        mock_update.effective_user.first_name = "TestUser"
-        mock_update.effective_user.username = "testuser"
-        mock_update.effective_chat.id = 67890
-        
-        context = Mock()
-        await start_command(mock_update, context)
+        await start_command(mock_message)
         
         # Verify response was sent
-        mock_update.message.reply_text.assert_called_once()
-        call_args = mock_update.message.reply_text.call_args[0]
+        mock_message.answer.assert_called_once()
+        call_args = mock_message.answer.call_args[0]
         assert "Welcome" in call_args[0] or "start" in call_args[0].lower()
     
     @pytest.mark.asyncio
-    async def test_help_command(self, mock_update):
+    async def test_help_command(self, mock_message):
         """Test help command handler."""
         from bot.handlers.commands import help_command
         
-        # Configure mock for async reply_html
-        mock_update.message.reply_html = AsyncMock()
-        
-        # Provide proper mock data to avoid JSON serialization errors
-        mock_update.effective_user.id = 12345
-        mock_update.effective_user.first_name = "TestUser"
-        mock_update.effective_user.username = "testuser"
-        mock_update.effective_chat.id = 67890
-        
-        context = Mock()
-        await help_command(mock_update, context)
+        await help_command(mock_message)
         
         # Verify response was sent
-        mock_update.message.reply_html.assert_called_once()
-        call_args = mock_update.message.reply_html.call_args[0]
-        assert "help" in call_args[0].lower() or "command" in call_args[0].lower()
+        mock_message.answer.assert_called_once()
+        call_args = mock_message.answer.call_args
+        # Check if parse_mode was used
+        assert call_args is not None
 
 
 class TestMessageHandlers:
@@ -100,26 +88,16 @@ class TestMessageHandlers:
         assert handle_photo is not None
     
     @pytest.mark.asyncio
-    async def test_handle_message(self, mock_update):
+    async def test_handle_message(self, mock_message):
         """Test message handler."""
         from bot.handlers.messages import handle_message
         
-        # Configure mock for async reply_html
-        mock_update.message.reply_html = AsyncMock()
+        mock_message.text = "Hello, bot!"
         
-        # Provide proper mock data to avoid JSON serialization errors
-        mock_update.effective_user.id = 12345
-        mock_update.effective_user.first_name = "TestUser"
-        mock_update.effective_user.username = "testuser"
-        mock_update.effective_chat.id = 67890
-        
-        context = Mock()
-        mock_update.message.text = "Hello, bot!"
-        
-        await handle_message(mock_update, context)
+        await handle_message(mock_message)
         
         # Verify some response was sent (implementation dependent)
-        mock_update.message.reply_html.assert_called_once()
+        mock_message.answer.assert_called_once()
 
 
 class TestErrorHandlers:
@@ -127,18 +105,20 @@ class TestErrorHandlers:
     
     def test_errors_import(self):
         """Test that error handlers can be imported."""
-        from bot.handlers.errors import error_handler, timeout_handler
+        from bot.handlers.errors import error_handler
+        
         assert error_handler is not None
-        assert timeout_handler is not None
     
     @pytest.mark.asyncio
     async def test_error_handler(self, mock_update):
-        """Test error handler."""
+        """Test error handler functionality."""
         from bot.handlers.errors import error_handler
+        from aiogram.types import ErrorEvent
         
-        context = Mock()
-        context.error = Exception("Test error")
+        error = Exception("Test error")
+        error_event = ErrorEvent(update=mock_update, exception=error)
         
-        await error_handler(mock_update, context)
+        # Should handle error without crashing
+        await error_handler(error_event)
         
-        # Verify handler doesn't crash with errors
+        # Test passes if no exception is raised

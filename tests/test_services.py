@@ -1,5 +1,4 @@
-"""
-Unit tests for service modules.
+"""Unit tests for service modules.
 
 This module tests polling, webhook, and other service components.
 """
@@ -22,25 +21,22 @@ class TestPollingService:
         """Test PollingService creation."""
         from services.polling import PollingService
         
-        with patch('telegram.ext.Application') as mock_app:
-            mock_application = Mock()
-            service = PollingService(mock_application)
-            assert service is not None
+        mock_bot = Mock()
+        mock_dp = Mock()
+        service = PollingService(mock_bot, mock_dp)
+        assert service is not None
     
     @pytest.mark.asyncio
     async def test_polling_start_stop(self, mock_config):
         """Test polling service start and stop."""
         from services.polling import PollingService
         
-        mock_application = Mock()
-        mock_application.start = AsyncMock()
-        mock_application.stop = AsyncMock()
-        mock_application.updater = Mock()
-        mock_application.updater.start_polling = AsyncMock()
-        mock_application.updater.stop = AsyncMock()
-        mock_application.updater.running = True
+        mock_bot = Mock()
+        mock_dp = Mock()
+        mock_dp.start_polling = AsyncMock()
+        mock_dp.stop_polling = AsyncMock()
         
-        service = PollingService(mock_application)
+        service = PollingService(mock_bot, mock_dp)
         
         # Test that methods exist and can be called
         assert hasattr(service, 'start')
@@ -59,8 +55,9 @@ class TestWebhookService:
         """Test WebhookService creation."""
         from services.webhook import WebhookService
         
-        mock_application = Mock()
-        service = WebhookService(mock_application)
+        mock_bot = Mock()
+        mock_dp = Mock()
+        service = WebhookService(mock_bot, mock_dp)
         assert service is not None
     
     @pytest.mark.asyncio
@@ -68,15 +65,13 @@ class TestWebhookService:
         """Test webhook service start and stop."""
         from services.webhook import WebhookService
         
-        mock_application = Mock()
-        mock_application.start = AsyncMock()
-        mock_application.stop = AsyncMock()
-        mock_application.bot = Mock()
-        mock_application.bot.set_webhook = AsyncMock()
-        mock_application.bot.get_webhook_info = AsyncMock()
-        mock_application.bot.delete_webhook = AsyncMock()
+        mock_bot = Mock()
+        mock_dp = Mock()
+        mock_bot.set_webhook = AsyncMock()
+        mock_bot.get_webhook_info = AsyncMock()
+        mock_bot.delete_webhook = AsyncMock()
         
-        service = WebhookService(mock_application)
+        service = WebhookService(mock_bot, mock_dp)
         
         # Test that methods exist and can be called
         assert hasattr(service, 'start')

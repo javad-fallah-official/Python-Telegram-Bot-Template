@@ -60,6 +60,24 @@ def format_user(user) -> str:
         return f"User {user.id}"
 
 
+def format_user_info(user) -> str:
+    """Format detailed user information to string."""
+    info_parts = []
+    
+    if hasattr(user, 'first_name') and user.first_name:
+        info_parts.append(f"Name: {user.first_name}")
+        if hasattr(user, 'last_name') and user.last_name:
+            info_parts[-1] += f" {user.last_name}"
+    
+    if hasattr(user, 'username') and user.username:
+        info_parts.append(f"Username: @{user.username}")
+    
+    if hasattr(user, 'id'):
+        info_parts.append(f"ID: {user.id}")
+    
+    return "\n".join(info_parts) if info_parts else "Unknown user"
+
+
 def format_datetime(dt: datetime, format_str: str = "%Y-%m-%d %H:%M:%S") -> str:
     """Format datetime to string."""
     return dt.strftime(format_str)

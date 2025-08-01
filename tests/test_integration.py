@@ -9,7 +9,7 @@ import pytest
 from unittest.mock import Mock, AsyncMock, patch
 import asyncio
 
-from tests.utils import mock_config, mock_bot, mock_update, skip_if_no_token, TestConfig
+from tests.utils import mock_config, mock_bot, mock_message, mock_update, skip_if_no_token, TestConfig
 
 
 class TestBotIntegration:
@@ -17,60 +17,58 @@ class TestBotIntegration:
     
     @pytest.mark.asyncio
     async def test_bot_startup_shutdown(self, mock_config):
-        """Test complete bot startup and shutdown cycle."""
+        """Test bot startup and shutdown process."""
         from core.runner import BotRunner
         
-        with patch('core.runner.BotFactory') as mock_factory:
-            mock_app = Mock()
-            mock_app.run_polling = AsyncMock()
-            mock_app.stop = AsyncMock()
-            mock_factory.create_bot.return_value = mock_app
+        with patch('bot.factory.BotFactory.create_bot') as mock_create_bot, \
+             patch('bot.factory.BotFactory.initialize_bot') as mock_init_bot:
+            
+            mock_bot = Mock()
+            mock_dp = Mock()
+            mock_create_bot.return_value = (mock_bot, mock_dp)
+            mock_init_bot.return_value = None
             
             runner = BotRunner()
             
-            # Test that runner can be created and has required methods
-            assert hasattr(runner, 'start')
-            assert hasattr(runner, 'stop')
+            # Test initialization
+            await runner.initialize()
+            
+            # Test that runner has been initialized
+            assert runner.bot is not None
+            assert runner.dp is not None
+            mock_create_bot.assert_called_once()
+            mock_init_bot.assert_called_once_with(mock_bot)
     
     @pytest.mark.asyncio
-    async def test_command_flow(self, mock_config, mock_update):
+    async def test_command_flow(self, mock_config, mock_message):
         """Test complete command handling flow."""
         from bot.handlers.commands import start_command
         from core.middleware import RateLimiter
         
-        # Configure mock for async reply_text
-        mock_update.message.reply_text = AsyncMock()
-        
-        # Provide proper mock data to avoid JSON serialization errors
-        mock_update.effective_user.id = 12345
-        mock_update.effective_user.first_name = "TestUser"
-        mock_update.effective_user.username = "testuser"
-        mock_update.effective_chat.id = 67890
-        
         # Test rate limiting + command handling
         limiter = RateLimiter(max_requests=5, window_seconds=60)
-        user_id = mock_update.effective_user.id
+        user_id = mock_message.from_user.id
         
         # Should be allowed initially (not async)
         assert limiter.is_allowed(user_id) == True
         
         # Execute command
-        context = Mock()
-        await start_command(mock_update, context)
+        await start_command(mock_message)
         
         # Verify response
-        mock_update.message.reply_text.assert_called_once()
+        mock_message.answer.assert_called_once()
     
     @pytest.mark.asyncio
     async def test_error_handling_flow(self, mock_config, mock_update):
         """Test error handling integration."""
         from bot.handlers.errors import error_handler
+        from aiogram.types import ErrorEvent
         
-        context = Mock()
-        context.error = Exception("Test integration error")
+        error = Exception("Test integration error")
+        error_event = ErrorEvent(update=mock_update, exception=error)
         
         # Should handle error without crashing
-        await error_handler(mock_update, context)
+        await error_handler(error_event)
         
         # Test passes if no exception is raised
 
@@ -100,13 +98,13 @@ class TestConfigurationIntegration:
         from services.polling import PollingService
         from services.webhook import WebhookService
         
-        # Create mock applications
-        mock_polling_app = Mock()
-        mock_webhook_app = Mock()
+        # Create mock bot and dispatcher
+        mock_bot = Mock()
+        mock_dp = Mock()
         
-        # Both services should be creatable with mock applications
-        polling_service = PollingService(mock_polling_app)
-        webhook_service = WebhookService(mock_webhook_app)
+        # Both services should be creatable with mock bot and dispatcher
+        polling_service = PollingService(mock_bot, mock_dp)
+        webhook_service = WebhookService(mock_bot, mock_dp)
         
         assert polling_service is not None
         assert webhook_service is not None
@@ -131,36 +129,26 @@ class TestMiddlewareIntegration:
     """Integration tests for middleware."""
     
     @pytest.mark.asyncio
-    async def test_rate_limiting_integration(self, mock_update):
+    async def test_rate_limiting_integration(self, mock_message):
         """Test rate limiting with actual handlers."""
         from core.middleware import RateLimiter
         from bot.handlers.commands import start_command
         
-        # Configure mock for async reply_text
-        mock_update.message.reply_text = AsyncMock()
-        
-        # Provide proper mock data to avoid JSON serialization errors
-        mock_update.effective_user.id = 12345
-        mock_update.effective_user.first_name = "TestUser"
-        mock_update.effective_user.username = "testuser"
-        mock_update.effective_chat.id = 67890
-        
         limiter = RateLimiter(max_requests=2, window_seconds=60)
-        user_id = mock_update.effective_user.id
+        user_id = mock_message.from_user.id
         
         # First two requests should pass (not async)
         assert limiter.is_allowed(user_id) == True
-        context = Mock()
-        await start_command(mock_update, context)
+        await start_command(mock_message)
         
         assert limiter.is_allowed(user_id) == True
-        await start_command(mock_update, context)
+        await start_command(mock_message)
         
         # Third should be rate limited
         assert limiter.is_allowed(user_id) == False
         
         # Verify commands were called
-        assert mock_update.message.reply_text.call_count == 2
+        assert mock_message.answer.call_count == 2
 
 
 @skip_if_no_token
@@ -186,6 +174,21 @@ class TestRealBotIntegration:
 
 class TestUtilityIntegration:
     """Integration tests for utility functions."""
+    
+    @pytest.mark.asyncio
+    async def test_utility_integration(self, mock_message):
+        """Test utility functions with handlers."""
+        from utils.formatters import format_user_info
+        from bot.handlers.commands import start_command
+        
+        # Test utility function
+        user_info = format_user_info(mock_message.from_user)
+        assert "TestUser" in user_info
+        
+        # Test with handler
+        await start_command(mock_message)
+        
+        mock_message.answer.assert_called_once()
     
     def test_formatter_keyboard_integration(self):
         """Test formatters work with keyboards."""

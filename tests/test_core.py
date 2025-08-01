@@ -153,7 +153,9 @@ class TestRunner:
         from core.runner import BotRunner
         
         runner = BotRunner()
-        assert runner is not None
-        assert runner.application is None
-        assert runner.service is None
-        assert runner._running == False
+        
+        # Test that runner can be created and has required methods
+        assert runner.bot is None
+        assert runner.dp is None
+        assert hasattr(runner, 'start_polling')
+        assert hasattr(runner, 'shutdown')
