@@ -242,7 +242,6 @@ class LogAnalyzer:
             for error in errors['recent_errors'][-3:]:
                 timestamp = datetime.fromisoformat(error['timestamp']).strftime('%H:%M:%S')
                 report.append(f"  • [{timestamp}] {error['error_type']}: {error['message'][:50]}...")
-        
         # Activity Distribution
         report.append("\n📈 HOURLY ACTIVITY DISTRIBUTION")
         report.append("-" * 35)
