@@ -68,14 +68,25 @@ def mock_bot():
 
 
 @pytest.fixture
+def mock_message():
+    """Provide a mock aiogram Message."""
+    message = AsyncMock(spec=Message)
+    message.text = "/test"
+    message.from_user = User(id=12345, first_name="TestUser", is_bot=False, username="testuser")
+    message.chat = Chat(id=67890, type="private")
+    message.answer = AsyncMock()
+    message.reply = AsyncMock()
+    return message
+
+@pytest.fixture
 def mock_update():
-    """Provide a mock Telegram update."""
-    update = Mock()
-    update.message = Mock()
+    """Provide a mock aiogram Update."""
+    update = Mock(spec=Update)
+    update.message = Mock(spec=Message)
     update.message.text = "/test"
-    update.message.from_user = Mock(id=12345, first_name="TestUser")
-    update.message.chat = Mock(id=67890, type="private")
-    update.message.reply_text = AsyncMock()
+    update.message.from_user = User(id=12345, first_name="TestUser", is_bot=False, username="testuser")
+    update.message.chat = Chat(id=67890, type="private")
+    update.message.answer = AsyncMock()
     return update
 
 

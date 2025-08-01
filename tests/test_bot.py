@@ -7,7 +7,7 @@ This module tests bot factory, handlers, and related functionality.
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 
-from tests.utils import mock_config, mock_bot, mock_update, TestConfig
+from tests.utils import mock_config, mock_bot, mock_message, mock_update, TestConfig
 
 
 class TestBotFactory:
@@ -22,13 +22,17 @@ class TestBotFactory:
         """Test BotFactory bot creation."""
         from bot.factory import BotFactory
         
-        with patch('telegram.ext.Application.builder') as mock_builder:
-            mock_app = Mock()
-            mock_builder.return_value.token.return_value.build.return_value = mock_app
-            
-            with patch('bot.factory.register_handlers'):
-                bot = BotFactory.create_application()
-                assert bot is not None
+        with patch('aiogram.Bot') as mock_bot_class:
+            with patch('aiogram.Dispatcher') as mock_dispatcher_class:
+                mock_bot = Mock()
+                mock_dp = Mock()
+                mock_bot_class.return_value = mock_bot
+                mock_dispatcher_class.return_value = mock_dp
+                
+                with patch('bot.factory.register_handlers'):
+                    bot, dp = BotFactory.create_bot()
+                    assert bot is not None
+                    assert dp is not None
 
 
 class TestCommandHandlers:
