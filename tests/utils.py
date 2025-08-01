@@ -1,9 +1,7 @@
-"""
-Test utilities and fixtures for the Telegram Bot Template.
+"""Test utilities and fixtures for the Telegram Bot Template.
 
 This module provides common test utilities, fixtures, and helper functions
-that can be used across all test modules.
-"""
+that can be used across all test modules."""
 
 import asyncio
 import pytest
@@ -12,6 +10,8 @@ from typing import Dict, Any, Generator
 import tempfile
 import os
 
+from aiogram import Bot, Dispatcher
+from aiogram.types import User, Chat, Message, Update
 from core.config import Config
 
 
@@ -55,10 +55,10 @@ def mock_config():
 
 @pytest.fixture
 def mock_bot():
-    """Provide a mock Telegram bot instance."""
-    bot = AsyncMock()
+    """Provide a mock aiogram Bot instance."""
+    bot = AsyncMock(spec=Bot)
     bot.token = TestConfig.BOT_TOKEN
-    bot.get_me = AsyncMock(return_value=Mock(
+    bot.get_me = AsyncMock(return_value=User(
         id=123456789,
         is_bot=True,
         first_name="TestBot",
