@@ -4,6 +4,9 @@ Welcome to the Python Telegram Bot Template documentation! This directory contai
 
 ## 📖 Quick Navigation
 
+### Project Overview
+- [**Project Structure**](PROJECT_STRUCTURE.md) - Complete project structure and architecture guide
+
 ### Getting Started
 - [**Quick Start Guide**](../QUICKSTART.md) - Get your bot running in minutes
 - [**Installation & Setup**](setup/INSTALLATION.md) - Detailed installation instructions
@@ -42,6 +45,7 @@ Looking for something specific? Here are the most common topics:
 
 | Topic | Documentation |
 |-------|---------------|
+| **Project structure** | [Project Structure](PROJECT_STRUCTURE.md) |
 | **First time setup** | [Quick Start Guide](../QUICKSTART.md) |
 | **Environment variables** | [Configuration Guide](setup/CONFIGURATION.md) |
 | **Database setup** | [Database Guide](features/DATABASE.md) |
@@ -55,6 +59,7 @@ Looking for something specific? Here are the most common topics:
 ```
 docs/
 ├── README.md                    # This file - documentation index
+├── PROJECT_STRUCTURE.md         # Complete project structure guide
 ├── setup/                       # Setup and configuration
 │   ├── INSTALLATION.md         # Installation instructions
 │   └── CONFIGURATION.md        # Configuration guide
