@@ -381,6 +381,15 @@ WantedBy=multi-user.target
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 📚 Documentation
+
+- **[Quick Start Guide](QUICKSTART.md)** - Get up and running in minutes
+- **[Complete Documentation](docs/README.md)** - Comprehensive documentation index
+- **[Setup & Installation](docs/setup/)** - Detailed setup instructions
+- **[Features & Usage](docs/features/)** - Core features and usage guides
+- **[API Reference](docs/api/)** - Complete API documentation
+- **[Migration Guides](docs/migration/)** - Framework and database migration details
+
 ## 🆘 Support
 
 - 📖 [python-telegram-bot Documentation](https://docs.python-telegram-bot.org/)

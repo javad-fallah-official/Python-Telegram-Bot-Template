@@ -272,6 +272,16 @@ uv sync
 - Review the example bot in `example_bot.py`
 - Check the full documentation in `README.md`
 
+## 📚 Additional Resources
+
+- **[Complete Documentation](docs/README.md)** - Comprehensive documentation index
+- **[Setup & Installation](docs/setup/)** - Detailed setup instructions
+- **[Configuration Guide](docs/setup/CONFIGURATION.md)** - Environment variables and settings
+- **[Database Guide](docs/features/DATABASE.md)** - Database features and operations
+- **[Handlers Guide](docs/features/HANDLERS.md)** - Creating and managing bot handlers
+- **[API Reference](docs/api/)** - Complete API documentation
+- **[Migration Guides](docs/migration/)** - Framework and database migration details
+
 ---
 
 **Happy Bot Building! 🤖✨**
