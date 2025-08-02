@@ -269,7 +269,8 @@ async def test_bot_creation(mock_dispatcher, mock_bot):
     mock_dispatcher.return_value = mock_dp_instance
     
     # Create bot
-    bot, dp = BotFactory.create_bot()
+    bot = BotFactory.create_bot()
+dp = BotFactory.create_dispatcher()
     
     # Verify creation
     assert bot == mock_bot_instance

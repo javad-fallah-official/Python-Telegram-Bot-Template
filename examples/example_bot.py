@@ -26,7 +26,8 @@ class ExampleBot:
     async def setup(self):
         """Setup bot with custom handlers."""
         await self.db.connect()
-        self.bot, self.dp = BotFactory.create_bot()
+        self.bot = BotFactory.create_bot()
+        self.dp = BotFactory.create_dispatcher()
         await BotFactory.initialize_bot(self.bot)
         await self.add_custom_handlers()
         logger.info("Example bot setup completed")
@@ -140,7 +141,10 @@ async def main():
         await example_bot.setup()
         
         from core.runner import BotRunner
-        runner = BotRunner(example_bot.bot, example_bot.dp)
+        runner = BotRunner()
+        # Set the bot and dispatcher manually
+        runner.bot = example_bot.bot
+        runner.dp = example_bot.dp
         await runner.start_polling()
         
     except KeyboardInterrupt:

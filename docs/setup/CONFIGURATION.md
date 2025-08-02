@@ -258,7 +258,8 @@ from bot.factory import BotFactory
 import asyncio
 
 async def test():
-    bot, dp = BotFactory.create_bot()
+    bot = BotFactory.create_bot()
+dp = BotFactory.create_dispatcher()
     me = await bot.get_me()
     print(f'✅ Bot connected: @{me.username}')
     await bot.session.close()

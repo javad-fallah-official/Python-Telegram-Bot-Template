@@ -551,7 +551,8 @@ async def test_command_flow():
     """Test complete command flow."""
     from bot.factory import BotFactory
     
-    bot, dp = BotFactory.create_bot()
+    bot = BotFactory.create_bot()
+dp = BotFactory.create_dispatcher()
     
     # Register handlers
     from bot.handlers.registry import register_handlers

@@ -42,7 +42,8 @@ class BotRunner:
         
         try:
             # Create bot and dispatcher
-            self.bot, self.dp = BotFactory.create_bot()
+            self.bot = BotFactory.create_bot()
+            self.dp = BotFactory.create_dispatcher()
             
             # Initialize bot
             await BotFactory.initialize_bot(self.bot)
@@ -133,12 +134,13 @@ class BotRunner:
         return not self._shutdown_event.is_set() and (self.service.is_running if self.service else False)
 
 
-async def run_bot() -> None:
+async def run_bot(mode: str = None) -> None:
     """Run the bot based on configuration."""
     runner = BotRunner()
     
     try:
-        if Config.USE_WEBHOOK:
+        bot_mode = mode or Config.BOT_MODE
+        if bot_mode == "webhook":
             await runner.start_webhook()
         else:
             await runner.start_polling()
