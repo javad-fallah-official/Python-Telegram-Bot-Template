@@ -1,11 +1,14 @@
 import os
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import declarative_base
+from app.config import settings
+from app.utils.logger import get_logger
 
-POSTGRES_URL = os.getenv("POSTGRES_URL")
+POSTGRES_URL = settings.POSTGRES_URL
 DATABASE_URL = POSTGRES_URL if POSTGRES_URL else "sqlite+aiosqlite:///./dev.db"
+logger = get_logger("db")
 
-engine = create_async_engine(DATABASE_URL, echo=True, future=True)
+engine = create_async_engine(DATABASE_URL, echo=bool(getattr(settings, "DEBUG", True)), future=True)
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 Base = declarative_base()
 
