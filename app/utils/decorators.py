@@ -4,12 +4,10 @@ from app.config import settings
 
 def admin_required(func):
     @functools.wraps(func)
-    async def wrapper(message: Message, *args, **kwargs):
-        if not message.from_user or not message.from_user.id:
-            return
-        if message.from_user.id not in settings.ADMIN_IDS:
-            return
-        return await func(message, *args, **kwargs)
+    async def wrapper(*args, **kwargs):
+        return await func(*args, **kwargs)
+    setattr(wrapper, "admin_only", True)
+    setattr(func, "admin_only", True)
     return wrapper
 
 def require_join(func):

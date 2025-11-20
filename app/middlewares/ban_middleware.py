@@ -1,4 +1,4 @@
-from aiogram.dispatcher.middlewares.base import BaseMiddleware
+from aiogram import BaseMiddleware
 from app.db.base import get_session
 from app.db.models.user import User
 
