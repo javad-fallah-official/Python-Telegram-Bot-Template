@@ -1,0 +1,43 @@
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.so
+
+# Virtual Environment
+venv/
+.venv/
+
+# Environment variables
+.env
+
+# Databases
+*.db
+*.sqlite3
+
+# Logs
+*.log
+
+# IDE/Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Docker
+docker/
+
+# Tests
+tests/__pycache__/
+.pytest_cache/
+
+# Misc
+*.egg-info/
+dist/
+build/
+*.egg
