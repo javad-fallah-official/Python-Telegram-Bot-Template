@@ -1,7 +1,7 @@
 import asyncio
 from aiogram import Bot, Dispatcher
 from app.config import settings
-from app.modules import admin, bans, joincheck, referral, dev_tools
+from app.modules import admin, bans, joincheck, referral, dev_tools, general
 from app.middlewares import admin_middleware, ban_middleware, joincheck_middleware
 from app.db.base import init_db, DATABASE_URL
 from app.utils.logger import get_logger
@@ -18,14 +18,16 @@ dp = Dispatcher()
 dp.message.middleware(ban_middleware.BanMiddleware())
 dp.message.middleware(joincheck_middleware.JoinCheckMiddleware())
 dp.message.middleware(admin_middleware.AdminMiddleware())
+dp.callback_query.middleware(joincheck_middleware.JoinCheckMiddleware())
 
-plugins = [admin, bans, joincheck, referral, dev_tools]
+plugins = [admin, bans, joincheck, referral, dev_tools, general]
 feature_map = {
     "admin": "admin_tools",
     "bans": "bans",
     "joincheck": "join_check",
     "referral": "referral",
     "dev_tools": "admin_tools",
+    "general": "general",
 }
 GREEN = "\033[32m"
 RED = "\033[31m"

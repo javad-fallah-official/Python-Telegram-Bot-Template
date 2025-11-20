@@ -7,6 +7,7 @@ class Features(BaseSettings):
     bans: bool = True
     join_check: bool = True
     referral: bool = True
+    general: bool = True
 
     model_config = SettingsConfigDict(env_prefix="FEATURES_")
 
@@ -15,6 +16,7 @@ class Settings(BaseSettings):
     BOT_MODE: str = "polling"
     POSTGRES_URL: str | None = None
     DEBUG: bool = True
+    SPONSOR_ENFORCE: bool = True
     FEATURES: Features = Features()
     ADMIN_IDS: List[int] = []
     REQUIRED_CHANNELS: List[str] = []

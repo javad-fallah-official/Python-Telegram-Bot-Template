@@ -18,5 +18,6 @@ async def get_session():
 
 async def init_db():
     from app.db.models.user import User
+    from app.db.models.sponsor_verification import SponsorVerification
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
