@@ -3,8 +3,8 @@
 import logging
 import time
 from aiogram.types import Message
-from core.config import Config
-from core.logger import log_user_action, log_performance, log_error
+from src.core.config import Config
+from src.core.logger import log_user_action, log_performance, log_error
 
 logger = logging.getLogger(__name__)
 

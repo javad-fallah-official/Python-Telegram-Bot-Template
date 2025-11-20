@@ -6,7 +6,7 @@ from typing import Optional, Tuple
 from fastapi import FastAPI, Request, HTTPException, Header
 from aiogram import Bot, Dispatcher
 from aiogram.types import Update
-from core.config import Config
+from src.core.config import Config
 from .base import BotService
 
 logger = logging.getLogger(__name__)

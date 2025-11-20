@@ -6,12 +6,12 @@ import sys
 from typing import Optional
 from aiogram import Bot, Dispatcher
 
-from core.config import Config
-from core.logger import setup_logging, get_logger
-from utils.logging_utils import log_startup_info, log_shutdown_info
-from bot.factory import BotFactory
-from services.polling import create_polling_service
-from services.webhook import create_webhook_service
+from src.core.config import Config
+from src.core.logger import setup_logging, get_logger
+from src.utils.logging_utils import log_startup_info, log_shutdown_info
+from src.bot.factory import BotFactory
+from src.services.polling import create_polling_service
+from src.services.webhook import create_webhook_service
 
 logger = get_logger('runner')
 

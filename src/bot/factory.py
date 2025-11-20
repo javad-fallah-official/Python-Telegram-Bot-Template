@@ -4,7 +4,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from core.config import Config
+from src.core.config import Config
 from .handlers import register_handlers
 
 logger = logging.getLogger(__name__)

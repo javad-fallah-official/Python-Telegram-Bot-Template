@@ -13,9 +13,9 @@ Usage:
 
 import asyncio
 import sys
-from core.runner import run_bot
-from core.logger import setup_logging
-from core.config import Config
+from src.core.runner import run_bot
+from src.core.logger import setup_logging
+from src.core.config import Config
 
 logger = setup_logging()
 

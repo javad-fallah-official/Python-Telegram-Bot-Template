@@ -7,8 +7,8 @@ import time
 import functools
 from typing import Callable, Any, Dict, Optional
 from aiogram.types import Update, Message
-from core.config import Config
-from core.logger import get_logger, log_user_action, log_error, log_performance
+from src.core.config import Config
+from src.core.logger import get_logger, log_user_action, log_error, log_performance
 
 logger = get_logger('utils.logging')
 
