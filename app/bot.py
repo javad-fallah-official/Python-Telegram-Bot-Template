@@ -1,8 +1,7 @@
 import asyncio
 from aiogram import Bot, Dispatcher
 from app.config import settings
-from app.modules import admin, bans, joincheck, referral
-from app.dev_tools import router as dev_router
+from app.modules import admin, bans, joincheck, referral, dev_tools
 from app.middlewares import admin_middleware, ban_middleware, joincheck_middleware
 from app.db.base import init_db
 
@@ -13,20 +12,19 @@ dp.message.middleware(ban_middleware.BanMiddleware())
 dp.message.middleware(joincheck_middleware.JoinCheckMiddleware())
 dp.message.middleware(admin_middleware.AdminMiddleware())
 
-plugins = [admin, bans, joincheck, referral]
+plugins = [admin, bans, joincheck, referral, dev_tools]
 feature_map = {
     "admin": "admin_tools",
     "bans": "bans",
     "joincheck": "join_check",
     "referral": "referral",
+    "dev_tools": "admin_tools",
 }
 for plugin in plugins:
     plugin_key = plugin.__name__.split(".")[-1].lower()
     feature_name = feature_map.get(plugin_key, None)
     if feature_name and getattr(settings.FEATURES, feature_name, True):
         dp.include_router(plugin.router)
-if getattr(settings.FEATURES, "admin_tools", True):
-    dp.include_router(dev_router)
 
 async def main():
     await init_db()
