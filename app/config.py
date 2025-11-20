@@ -1,5 +1,6 @@
 from typing import List
-from pydantic import BaseSettings, validator
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Features(BaseSettings):
     admin_tools: bool = True
@@ -7,8 +8,7 @@ class Features(BaseSettings):
     join_check: bool = True
     referral: bool = True
 
-    class Config:
-        env_prefix = "FEATURES_"
+    model_config = SettingsConfigDict(env_prefix="FEATURES_")
 
 class Settings(BaseSettings):
     BOT_TOKEN: str
@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     JOINCHECK_CACHE_TTL: int = 300
     JOIN_PROMPT_TEXT: str = "Please join the required channels"
 
-    @validator("ADMIN_IDS", pre=True)
+    @field_validator("ADMIN_IDS", mode="before")
     def parse_admin_ids(cls, v):
         if v is None or v == "":
             return []
@@ -29,7 +29,7 @@ class Settings(BaseSettings):
             return [int(x) for x in v]
         return [int(x) for x in str(v).split(",") if x]
 
-    @validator("REQUIRED_CHANNELS", pre=True)
+    @field_validator("REQUIRED_CHANNELS", mode="before")
     def parse_required_channels(cls, v):
         if v is None or v == "":
             return []
@@ -37,7 +37,6 @@ class Settings(BaseSettings):
             return [str(x) for x in v]
         return [str(x).strip() for x in str(v).split(",") if x]
 
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file=".env")
 
 settings = Settings()
