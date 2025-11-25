@@ -29,9 +29,6 @@ venv/
 .DS_Store
 Thumbs.db
 
-# Docker
-docker/
-
 # Tests
 tests/__pycache__/
 .pytest_cache/

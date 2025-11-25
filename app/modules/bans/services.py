@@ -1,32 +1,23 @@
-from app.db.base import get_session
+from app.core.db.adapter import db_adapter
 from app.utils.logger import get_logger
-from app.db.models.user import User
 
 logger = get_logger("bans")
 
 async def ban_user(user_id: int):
-    async for session in get_session():
-        user = await session.get(User, user_id)
-        if not user:
-            user = User(id=user_id, is_banned=True)
+    try:
+        row = await db_adapter.fetchone("SELECT id FROM users WHERE id=?", [user_id])
+        if row is None:
+            await db_adapter.execute("INSERT INTO users (id, is_banned) VALUES (?, ?)", [user_id, True])
         else:
-            user.is_banned = True
-        session.add(user)
-        try:
-            await session.commit()
-        except Exception as e:
-            logger.error(f"DB error on ban_user: {e}")
-            await session.rollback()
+            await db_adapter.execute("UPDATE users SET is_banned=? WHERE id=?", [True, user_id])
+    except Exception as e:
+        logger.error(f"DB error on ban_user: {e}")
 
 async def unban_user(user_id: int):
-    async for session in get_session():
-        user = await session.get(User, user_id)
-        if not user:
+    try:
+        row = await db_adapter.fetchone("SELECT id FROM users WHERE id=?", [user_id])
+        if row is None:
             return
-        user.is_banned = False
-        session.add(user)
-        try:
-            await session.commit()
-        except Exception as e:
-            logger.error(f"DB error on unban_user: {e}")
-            await session.rollback()
+        await db_adapter.execute("UPDATE users SET is_banned=? WHERE id=?", [False, user_id])
+    except Exception as e:
+        logger.error(f"DB error on unban_user: {e}")

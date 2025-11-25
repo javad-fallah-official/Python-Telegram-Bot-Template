@@ -8,6 +8,8 @@ from app.config import settings
 
 class MSSQLAdapter:
     _pool: Optional[aioodbc.Pool] = None
+    def __init__(self):
+        self._timeout = int(getattr(settings, "MSSQL_QUERY_TIMEOUT", 30))
 
     async def _get_pool(self) -> aioodbc.Pool:
         if self._pool is None:
@@ -31,7 +33,7 @@ class MSSQLAdapter:
             return await loop.run_in_executor(None, self._sync_execute, query, params)
 
     def _sync_execute(self, query: str, params: Optional[Iterable] = None) -> int:
-        with pyodbc.connect(settings.MSSQL_DSN) as conn:
+        with pyodbc.connect(settings.MSSQL_DSN, timeout=self._timeout) as conn:
             with conn.cursor() as cur:
                 cur.execute(query, params)
                 return cur.rowcount
@@ -48,7 +50,7 @@ class MSSQLAdapter:
             return await loop.run_in_executor(None, self._sync_fetchone, query, params)
 
     def _sync_fetchone(self, query: str, params: Optional[Iterable] = None) -> Optional[Tuple]:
-        with pyodbc.connect(settings.MSSQL_DSN) as conn:
+        with pyodbc.connect(settings.MSSQL_DSN, timeout=self._timeout) as conn:
             with conn.cursor() as cur:
                 cur.execute(query, params)
                 return cur.fetchone()
@@ -65,7 +67,7 @@ class MSSQLAdapter:
             return await loop.run_in_executor(None, self._sync_fetchall, query, params)
 
     def _sync_fetchall(self, query: str, params: Optional[Iterable] = None) -> List[Tuple]:
-        with pyodbc.connect(settings.MSSQL_DSN) as conn:
+        with pyodbc.connect(settings.MSSQL_DSN, timeout=self._timeout) as conn:
             with conn.cursor() as cur:
                 cur.execute(query, params)
                 return cur.fetchall()

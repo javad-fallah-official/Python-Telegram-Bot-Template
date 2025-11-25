@@ -1,8 +1,7 @@
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from app.config import settings
 from app.modules.joincheck.services import verify_membership, record_enforcement_message, cleanup_enforcement_messages
-from app.db.base import get_session
-from app.db.models.sponsor_verification import SponsorVerification
+from app.core.db.adapter import db_adapter
 
 async def verify_sponsor_join(call: CallbackQuery):
     bot = call.bot
@@ -13,10 +12,10 @@ async def verify_sponsor_join(call: CallbackQuery):
         return
     passed, missing = await verify_membership(bot, user.id, channels, fresh=True)
     try:
-        async for session in get_session():
-            rec = SponsorVerification(user_id=user.id, channels_missing=(",".join([m.lstrip("@") for m in missing]) if missing else None), policy="all", success=passed)
-            session.add(rec)
-            await session.commit()
+        await db_adapter.execute(
+            "INSERT INTO sponsor_verifications (user_id, channels_missing, policy, success) VALUES (?, ?, ?, ?)",
+            [user.id, (",".join([m.lstrip("@") for m in missing]) if missing else None), "all", passed],
+        )
     except Exception:
         pass
     if passed:

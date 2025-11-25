@@ -4,6 +4,7 @@ from app.config import settings
 from app.modules import admin, bans, joincheck, referral, dev_tools, general
 from app.middlewares import admin_middleware, ban_middleware, joincheck_middleware
 from app.db.base import init_db, DATABASE_URL
+from app.core.db.adapter import init_db_adapter, close_db_adapter
 from app.utils.logger import get_logger
 
 logger = get_logger("app")
@@ -45,18 +46,22 @@ logger.info("🔌 Modules: " + labels)
 
 async def main():
     logger.info("🧱 Initializing database...")
+    await init_db_adapter()
     await init_db()
     logger.info("✅ Database initialized")
     if settings.BOT_MODE == "polling":
         logger.info("📡 Starting polling")
-        await dp.start_polling(bot)
+        try:
+            await dp.start_polling(bot)
+        finally:
+            await close_db_adapter()
     elif settings.BOT_MODE == "webhook":
         logger.info("🔗 Starting webhook")
         await dp.start_webhook(
             bot,
             webhook_path="/webhook",
-            on_startup=None,
-            on_shutdown=None,
+            on_startup=init_db_adapter,
+            on_shutdown=close_db_adapter,
             skip_updates=True,
         )
 
