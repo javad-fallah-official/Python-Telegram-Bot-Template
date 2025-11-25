@@ -1,0 +1,135 @@
+
+import asyncio
+from typing import Optional, Iterable, Tuple, List
+
+import aioodbc
+import pyodbc
+from app.config import settings
+
+class MSSQLAdapter:
+    _pool: Optional[aioodbc.Pool] = None
+
+    async def _get_pool(self) -> aioodbc.Pool:
+        if self._pool is None:
+            self._pool = await aioodbc.create_pool(
+                dsn=settings.MSSQL_DSN,
+                min_size=settings.MSSQL_POOL_MIN,
+                max_size=settings.MSSQL_POOL_MAX,
+                loop=asyncio.get_event_loop(),
+            )
+        return self._pool
+
+    async def execute(self, query: str, params: Optional[Iterable] = None) -> int:
+        if settings.MSSQL_USE_AIOODBC:
+            pool = await self._get_pool()
+            async with pool.acquire() as conn:
+                async with conn.cursor() as cur:
+                    await cur.execute(query, params)
+                    return cur.rowcount
+        else:
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, self._sync_execute, query, params)
+
+    def _sync_execute(self, query: str, params: Optional[Iterable] = None) -> int:
+        with pyodbc.connect(settings.MSSQL_DSN) as conn:
+            with conn.cursor() as cur:
+                cur.execute(query, params)
+                return cur.rowcount
+
+    async def fetchone(self, query: str, params: Optional[Iterable] = None) -> Optional[Tuple]:
+        if settings.MSSQL_USE_AIOODBC:
+            pool = await self._get_pool()
+            async with pool.acquire() as conn:
+                async with conn.cursor() as cur:
+                    await cur.execute(query, params)
+                    return await cur.fetchone()
+        else:
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, self._sync_fetchone, query, params)
+
+    def _sync_fetchone(self, query: str, params: Optional[Iterable] = None) -> Optional[Tuple]:
+        with pyodbc.connect(settings.MSSQL_DSN) as conn:
+            with conn.cursor() as cur:
+                cur.execute(query, params)
+                return cur.fetchone()
+
+    async def fetchall(self, query: str, params: Optional[Iterable] = None) -> List[Tuple]:
+        if settings.MSSQL_USE_AIOODBC:
+            pool = await self._get_pool()
+            async with pool.acquire() as conn:
+                async with conn.cursor() as cur:
+                    await cur.execute(query, params)
+                    return await cur.fetchall()
+        else:
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, self._sync_fetchall, query, params)
+
+    def _sync_fetchall(self, query: str, params: Optional[Iterable] = None) -> List[Tuple]:
+        with pyodbc.connect(settings.MSSQL_DSN) as conn:
+            with conn.cursor() as cur:
+                cur.execute(query, params)
+                return cur.fetchall()
+
+    async def close(self):
+        if self._pool:
+            self._pool.close()
+            await self._pool.wait_closed()
+
+    async def transaction(self):
+        if settings.MSSQL_USE_AIOODBC:
+            pool = await self._get_pool()
+            conn = await pool.acquire()
+            return _AsyncTransaction(conn)
+        else:
+            conn = pyodbc.connect(settings.MSSQL_DSN)
+            return _SyncTransaction(conn)
+
+
+class _AsyncTransaction:
+    def __init__(self, conn: aioodbc.Connection):
+        self._conn = conn
+        self._cur = None
+
+    async def __aenter__(self):
+        self._cur = await self._conn.cursor()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if self._cur:
+            await self._cur.close()
+        if self._conn:
+            await self._conn.release()
+
+    async def execute(self, query: str, params: Optional[Iterable] = None):
+        await self._cur.execute(query, params)
+
+    async def commit(self):
+        await self._conn.commit()
+
+    async def rollback(self):
+        await self._conn.rollback()
+
+
+class _SyncTransaction:
+    def __init__(self, conn: pyodbc.Connection):
+        self._conn = conn
+        self._cur = None
+
+    def __enter__(self):
+        self._cur = self._conn.cursor()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._cur:
+            self._cur.close()
+        if self._conn:
+            self._conn.close()
+
+    def execute(self, query: str, params: Optional[Iterable] = None):
+        self._cur.execute(query, params)
+
+    def commit(self):
+        self._conn.commit()
+
+    def rollback(self):
+        self._conn.rollback()
