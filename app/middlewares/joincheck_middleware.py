@@ -3,7 +3,7 @@ from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from app.modules.joincheck.services import ensure_joined, bot_is_admin, verify_membership, record_enforcement_message
 from app.config import settings
 from app.utils.logger import get_logger
-from app.core.db.adapter import db_adapter
+from app.core.db.models.sponsor_verification import SponsorVerification
 import time
 
 class JoinCheckMiddleware(BaseMiddleware):
@@ -63,9 +63,6 @@ class JoinCheckMiddleware(BaseMiddleware):
 
     async def _log_verification(self, user_id: int, missing: list[str], passed: bool):
         try:
-            await db_adapter.execute(
-                "INSERT INTO sponsor_verifications (user_id, channels_missing, policy, success) VALUES (?, ?, ?, ?)",
-                [user_id, (",".join(missing) if missing else None), "all", passed],
-            )
+            await SponsorVerification.create(user_id, (",".join(missing) if missing else None), "all", passed)
         except Exception:
             return

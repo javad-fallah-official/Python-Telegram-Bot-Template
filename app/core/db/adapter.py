@@ -3,13 +3,13 @@ from app.config import settings
 
 db_type = str(getattr(settings, "DB_TYPE", "sqlite")).lower()
 if db_type == 'sqlite':
-    from app.core.db.sqlite_impl import SqliteAdapter as DatabaseAdapter
+    from app.core.db.engines.sqlite import SqliteAdapter as DatabaseAdapter
 elif db_type == 'postgres':
-    from app.core.db.postgres_impl import PostgresAdapter as DatabaseAdapter
+    from app.core.db.engines.postgres import PostgresAdapter as DatabaseAdapter
 elif db_type == 'mssql':
-    from app.core.db.mssql import MSSQLAdapter as DatabaseAdapter
+    from app.core.db.engines.mssql import MSSQLAdapter as DatabaseAdapter
 elif db_type == 'none':
-    from app.core.db.disabled_impl import DisabledAdapter as DatabaseAdapter
+    from app.core.db.engines.disabled import DisabledAdapter as DatabaseAdapter
 else:
     raise ImportError(f'Unsupported DB_TYPE: {db_type}')
 

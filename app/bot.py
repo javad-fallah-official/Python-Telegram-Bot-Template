@@ -3,7 +3,8 @@ from aiogram import Bot, Dispatcher
 from app.config import settings
 from app.modules import admin, bans, joincheck, referral, dev_tools, general
 from app.middlewares import admin_middleware, ban_middleware, joincheck_middleware
-from app.db.base import init_db
+from app.core.db.adapter import init_db_adapter, close_db_adapter
+from app.core.db.helpers import ensure_schema
 from app.core.db.adapter import init_db_adapter, close_db_adapter
 from app.utils.logger import get_logger
 
@@ -47,7 +48,7 @@ logger.info("🔌 Modules: " + labels)
 async def main():
     logger.info("🧱 Initializing database...")
     await init_db_adapter()
-    await init_db()
+    await ensure_schema()
     logger.info("✅ Database initialized")
     if settings.BOT_MODE == "polling":
         logger.info("📡 Starting polling")

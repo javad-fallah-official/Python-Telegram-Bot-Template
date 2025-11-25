@@ -1,7 +1,5 @@
-
 import asyncio
 from typing import Optional, Iterable, Tuple, List
-
 import aioodbc
 import pyodbc
 from app.config import settings
@@ -77,11 +75,6 @@ class MSSQLAdapter:
             with conn.cursor() as cur:
                 cur.execute(query, params)
                 return cur.fetchall()
-
-    async def close(self):
-        if self._pool:
-            self._pool.close()
-            await self._pool.wait_closed()
 
     async def transaction(self):
         if bool(getattr(settings, "MSSQL_USE_AIOODBC", True)):
