@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     BOT_TOKEN: str
     BOT_MODE: str = "polling"
     POSTGRES_URL: str | None = None
+    POSTGRES_HOST: Optional[str] = "localhost"
+    POSTGRES_PORT: Optional[int] = 5432
+    POSTGRES_DB: Optional[str] = "aiogram_db"
+    POSTGRES_USER: Optional[str] = "postgres"
+    POSTGRES_PASS: Optional[str] = "password"
     DEBUG: bool = True
     SPONSOR_ENFORCE: bool = True
     FEATURES: Features = Features()
