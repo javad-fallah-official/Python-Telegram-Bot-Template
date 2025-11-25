@@ -3,14 +3,14 @@ from aiogram import Bot, Dispatcher
 from app.config import settings
 from app.modules import admin, bans, joincheck, referral, dev_tools, general
 from app.middlewares import admin_middleware, ban_middleware, joincheck_middleware
-from app.db.base import init_db, DATABASE_URL
+from app.db.base import init_db
 from app.core.db.adapter import init_db_adapter, close_db_adapter
 from app.utils.logger import get_logger
 
 logger = get_logger("app")
 logger.info("🚀 Starting Telegram Bot")
 logger.info(f"⚙️ Mode: {settings.BOT_MODE}")
-logger.info(f"🗄️ Database: {DATABASE_URL.split('://')[0]}")
+logger.info(f"🗄️ Database: {str(getattr(settings, 'DB_TYPE', 'sqlite'))}")
 logger.info(f"👤 Admins: {settings.ADMIN_IDS}")
 logger.info(f"📢 Required channels: {getattr(settings, 'REQUIRED_CHANNELS', [])}")
 bot = Bot(token=settings.BOT_TOKEN)

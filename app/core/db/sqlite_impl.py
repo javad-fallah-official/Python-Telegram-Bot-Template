@@ -1,4 +1,5 @@
 import aiosqlite
+import os
 from typing import Optional, Iterable, Tuple, List
 from app.config import settings
 
@@ -9,6 +10,9 @@ class SqliteAdapter:
 
     async def init(self):
         if self._conn is None:
+            dir_path = os.path.dirname(self._path)
+            if dir_path and not os.path.exists(dir_path):
+                os.makedirs(dir_path, exist_ok=True)
             self._conn = await aiosqlite.connect(self._path)
             await self._conn.execute("PRAGMA journal_mode=WAL;")
             await self._conn.execute("PRAGMA foreign_keys=ON;")

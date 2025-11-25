@@ -13,16 +13,19 @@ class MSSQLAdapter:
 
     async def _get_pool(self) -> aioodbc.Pool:
         if self._pool is None:
+            dsn = getattr(settings, "MSSQL_DSN", None)
+            min_size = int(getattr(settings, "MSSQL_POOL_MIN", 1))
+            max_size = int(getattr(settings, "MSSQL_POOL_MAX", 10))
             self._pool = await aioodbc.create_pool(
-                dsn=settings.MSSQL_DSN,
-                min_size=settings.MSSQL_POOL_MIN,
-                max_size=settings.MSSQL_POOL_MAX,
+                dsn=dsn,
+                min_size=min_size,
+                max_size=max_size,
                 loop=asyncio.get_event_loop(),
             )
         return self._pool
 
     async def execute(self, query: str, params: Optional[Iterable] = None) -> int:
-        if settings.MSSQL_USE_AIOODBC:
+        if bool(getattr(settings, "MSSQL_USE_AIOODBC", True)):
             pool = await self._get_pool()
             async with pool.acquire() as conn:
                 async with conn.cursor() as cur:
@@ -33,13 +36,14 @@ class MSSQLAdapter:
             return await loop.run_in_executor(None, self._sync_execute, query, params)
 
     def _sync_execute(self, query: str, params: Optional[Iterable] = None) -> int:
-        with pyodbc.connect(settings.MSSQL_DSN, timeout=self._timeout) as conn:
+        dsn = getattr(settings, "MSSQL_DSN", None)
+        with pyodbc.connect(dsn, timeout=self._timeout) as conn:
             with conn.cursor() as cur:
                 cur.execute(query, params)
                 return cur.rowcount
 
     async def fetchone(self, query: str, params: Optional[Iterable] = None) -> Optional[Tuple]:
-        if settings.MSSQL_USE_AIOODBC:
+        if bool(getattr(settings, "MSSQL_USE_AIOODBC", True)):
             pool = await self._get_pool()
             async with pool.acquire() as conn:
                 async with conn.cursor() as cur:
@@ -50,13 +54,14 @@ class MSSQLAdapter:
             return await loop.run_in_executor(None, self._sync_fetchone, query, params)
 
     def _sync_fetchone(self, query: str, params: Optional[Iterable] = None) -> Optional[Tuple]:
-        with pyodbc.connect(settings.MSSQL_DSN, timeout=self._timeout) as conn:
+        dsn = getattr(settings, "MSSQL_DSN", None)
+        with pyodbc.connect(dsn, timeout=self._timeout) as conn:
             with conn.cursor() as cur:
                 cur.execute(query, params)
                 return cur.fetchone()
 
     async def fetchall(self, query: str, params: Optional[Iterable] = None) -> List[Tuple]:
-        if settings.MSSQL_USE_AIOODBC:
+        if bool(getattr(settings, "MSSQL_USE_AIOODBC", True)):
             pool = await self._get_pool()
             async with pool.acquire() as conn:
                 async with conn.cursor() as cur:
@@ -67,7 +72,8 @@ class MSSQLAdapter:
             return await loop.run_in_executor(None, self._sync_fetchall, query, params)
 
     def _sync_fetchall(self, query: str, params: Optional[Iterable] = None) -> List[Tuple]:
-        with pyodbc.connect(settings.MSSQL_DSN, timeout=self._timeout) as conn:
+        dsn = getattr(settings, "MSSQL_DSN", None)
+        with pyodbc.connect(dsn, timeout=self._timeout) as conn:
             with conn.cursor() as cur:
                 cur.execute(query, params)
                 return cur.fetchall()
@@ -78,17 +84,18 @@ class MSSQLAdapter:
             await self._pool.wait_closed()
 
     async def transaction(self):
-        if settings.MSSQL_USE_AIOODBC:
+        if bool(getattr(settings, "MSSQL_USE_AIOODBC", True)):
             pool = await self._get_pool()
             conn = await pool.acquire()
-            return _AsyncTransaction(conn)
+            return _AsyncTransaction(pool, conn)
         else:
             conn = pyodbc.connect(settings.MSSQL_DSN)
             return _SyncTransaction(conn)
 
 
 class _AsyncTransaction:
-    def __init__(self, conn: aioodbc.Connection):
+    def __init__(self, pool: aioodbc.Pool, conn: aioodbc.Connection):
+        self._pool = pool
         self._conn = conn
         self._cur = None
 
@@ -100,7 +107,7 @@ class _AsyncTransaction:
         if self._cur:
             await self._cur.close()
         if self._conn:
-            await self._conn.release()
+            await self._pool.release(self._conn)
 
     async def execute(self, query: str, params: Optional[Iterable] = None):
         await self._cur.execute(query, params)
