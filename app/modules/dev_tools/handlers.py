@@ -7,9 +7,11 @@ from app.core.db import adapter as adp
 from app.core.db.orm.base_model import BaseModel
 from app.modules.dev_tools.confirmations import create_token, validate_token, consume_token
 from app.config import settings
+from app.utils.router_utils import get_router_commands
 
 @dev_only
 async def show_tables(message: Message, **kwargs):
+    """List all database tables"""
     tables = await adp.list_tables()
     if not tables:
         await message.answer("No tables found.")
@@ -21,6 +23,7 @@ async def show_tables(message: Message, **kwargs):
 
 @dev_only
 async def show_table(message: Message, **kwargs):
+    """Show schema and first 10 rows of a table"""
     parts = (message.text or "").split()
     if len(parts) < 2:
         await message.answer("Usage: /show_table <table>")
@@ -46,16 +49,19 @@ async def show_table(message: Message, **kwargs):
 
 @dev_only
 async def drop_tables(message: Message, **kwargs):
+    """Drop all tables (requires confirmation)"""
     token = create_token(message.from_user.id, "drop_tables", {}, int(getattr(settings, "DEV_CONFIRM_TIMEOUT", 60)))
     await message.answer(f"WARNING: This will DROP ALL TABLES. To confirm, reply: CONFIRM DROP {token}")
 
 @dev_only
 async def clear_tables(message: Message, **kwargs):
+    """Clear all tables (requires confirmation)"""
     token = create_token(message.from_user.id, "clear_tables", {}, int(getattr(settings, "DEV_CONFIRM_TIMEOUT", 60)))
     await message.answer(f"WARNING: This will CLEAR ALL TABLES. To confirm, reply: CONFIRM CLEAR {token}")
 
 @dev_only
 async def sql_exec(message: Message, **kwargs):
+    """Execute raw SQL (select/update/delete)"""
     text = message.text or ""
     sql = text.partition(" ")[2].strip()
     if not sql:
@@ -99,6 +105,7 @@ async def sql_exec(message: Message, **kwargs):
 
 @dev_only
 async def confirm_handler(message: Message, **kwargs):
+    """Handle confirmation actions"""
     txt = (message.text or "").strip()
     if not txt.startswith("CONFIRM"):
         return
@@ -129,3 +136,11 @@ async def confirm_handler(message: Message, **kwargs):
         await message.answer(f"Execution error: {msg}")
     finally:
         consume_token(token)
+
+@dev_only
+async def dev_commands_list(message: Message, **kwargs):
+    """List available dev commands"""
+    from .router import router
+    commands = get_router_commands(router)
+    text = f"🛠 <b>Dev Tools Commands</b>\n\n{commands}"
+    await message.answer(text, parse_mode="HTML")

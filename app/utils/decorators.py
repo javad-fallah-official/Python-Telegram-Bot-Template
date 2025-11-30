@@ -15,6 +15,7 @@ def require_join(func):
     return func
 
 def dev_only(func):
+    @functools.wraps(func)
     async def wrapper(message: Message, *args, **kwargs):
         uid = getattr(getattr(message, "from_user", None), "id", None)
         devs = set(getattr(settings, "DEV_USERS", []))
