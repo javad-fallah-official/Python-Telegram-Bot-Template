@@ -1,12 +1,13 @@
 from aiogram import Router
 from aiogram.types import Message
-from app.utils.decorators import admin_required
+from aiogram.filters import Command
+from app.utils.decorators import dev_only
 
 router = Router()
 
-@router.message()
-@admin_required
-async def dev_info(message: Message):
+@router.message(Command("dev_info"))
+@dev_only
+async def dev_info(message: Message, **kwargs):
     thread_id = getattr(message, "message_thread_id", None)
     info = f"Chat ID: {message.chat.id}\nUser ID: {message.from_user.id}"
     if thread_id is not None:

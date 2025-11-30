@@ -40,41 +40,57 @@ class MSSQLAdapter:
                 cur.execute(query, params)
                 return cur.rowcount
 
-    async def fetchone(self, query: str, params: Optional[Iterable] = None) -> Optional[Tuple]:
+    async def fetchone(self, query: str, params: Optional[Iterable] = None) -> Optional[dict]:
         if bool(getattr(settings, "MSSQL_USE_AIOODBC", True)):
             pool = await self._get_pool()
             async with pool.acquire() as conn:
                 async with conn.cursor() as cur:
                     await cur.execute(query, params)
-                    return await cur.fetchone()
+                    row = await cur.fetchone()
+                    if row is None:
+                        return None
+                    cols = [d[0] for d in cur.description]
+                    return {cols[i]: row[i] for i in range(len(cols))}
         else:
             loop = asyncio.get_event_loop()
             return await loop.run_in_executor(None, self._sync_fetchone, query, params)
 
-    def _sync_fetchone(self, query: str, params: Optional[Iterable] = None) -> Optional[Tuple]:
+    def _sync_fetchone(self, query: str, params: Optional[Iterable] = None) -> Optional[dict]:
         dsn = getattr(settings, "MSSQL_DSN", None)
         with pyodbc.connect(dsn, timeout=self._timeout) as conn:
             with conn.cursor() as cur:
                 cur.execute(query, params)
-                return cur.fetchone()
+                row = cur.fetchone()
+                if row is None:
+                    return None
+                cols = [d[0] for d in cur.description]
+                return {cols[i]: row[i] for i in range(len(cols))}
 
-    async def fetchall(self, query: str, params: Optional[Iterable] = None) -> List[Tuple]:
+    async def fetchall(self, query: str, params: Optional[Iterable] = None) -> List[dict]:
         if bool(getattr(settings, "MSSQL_USE_AIOODBC", True)):
             pool = await self._get_pool()
             async with pool.acquire() as conn:
                 async with conn.cursor() as cur:
                     await cur.execute(query, params)
-                    return await cur.fetchall()
+                    rows = await cur.fetchall()
+                    if not rows:
+                        return []
+                    cols = [d[0] for d in cur.description]
+                    return [{cols[i]: r[i] for i in range(len(cols))} for r in rows]
         else:
             loop = asyncio.get_event_loop()
             return await loop.run_in_executor(None, self._sync_fetchall, query, params)
 
-    def _sync_fetchall(self, query: str, params: Optional[Iterable] = None) -> List[Tuple]:
+    def _sync_fetchall(self, query: str, params: Optional[Iterable] = None) -> List[dict]:
         dsn = getattr(settings, "MSSQL_DSN", None)
         with pyodbc.connect(dsn, timeout=self._timeout) as conn:
             with conn.cursor() as cur:
                 cur.execute(query, params)
-                return cur.fetchall()
+                rows = cur.fetchall()
+                if not rows:
+                    return []
+                cols = [d[0] for d in cur.description]
+                return [{cols[i]: r[i] for i in range(len(cols))} for r in rows]
 
     async def transaction(self):
         if bool(getattr(settings, "MSSQL_USE_AIOODBC", True)):

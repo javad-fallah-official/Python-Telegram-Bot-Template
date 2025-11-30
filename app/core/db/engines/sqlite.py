@@ -29,16 +29,23 @@ class SqliteAdapter:
             await self._conn.commit()
             return cur.rowcount or 0
 
-    async def fetchone(self, query: str, params: Optional[Iterable] = None) -> Optional[Tuple]:
+    async def fetchone(self, query: str, params: Optional[Iterable] = None) -> Optional[dict]:
         await self.init()
         async with self._conn.execute(query, params or []) as cur:
-            return await cur.fetchone()
+            row = await cur.fetchone()
+            if row is None:
+                return None
+            cols = [d[0] for d in cur.description]
+            return {cols[i]: row[i] for i in range(len(cols))}
 
-    async def fetchall(self, query: str, params: Optional[Iterable] = None) -> List[Tuple]:
+    async def fetchall(self, query: str, params: Optional[Iterable] = None) -> List[dict]:
         await self.init()
         async with self._conn.execute(query, params or []) as cur:
             rows = await cur.fetchall()
-            return rows or []
+            if not rows:
+                return []
+            cols = [d[0] for d in cur.description]
+            return [{cols[i]: r[i] for i in range(len(cols))} for r in rows]
 
     async def transaction(self):
         await self.init()

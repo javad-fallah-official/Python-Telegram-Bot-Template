@@ -46,21 +46,21 @@ class PostgresAdapter:
             except Exception:
                 return 0
 
-    async def fetchone(self, query: str, params: Optional[Iterable] = None) -> Optional[Tuple]:
+    async def fetchone(self, query: str, params: Optional[Iterable] = None) -> Optional[dict]:
         await self.init()
         params = list(params or [])
         q = _convert_placeholders(query, len(params))
         async with self._pool.acquire() as conn:
             row = await conn.fetchrow(q, *params)
-            return tuple(row) if row else None
+            return dict(row) if row else None
 
-    async def fetchall(self, query: str, params: Optional[Iterable] = None) -> List[Tuple]:
+    async def fetchall(self, query: str, params: Optional[Iterable] = None) -> List[dict]:
         await self.init()
         params = list(params or [])
         q = _convert_placeholders(query, len(params))
         async with self._pool.acquire() as conn:
             rows = await conn.fetch(q, *params)
-            return [tuple(r) for r in rows]
+            return [dict(r) for r in rows]
 
     async def transaction(self):
         await self.init()

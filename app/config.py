@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     SPONSOR_ENFORCE: bool = True
     FEATURES: Features = Features()
     ADMIN_IDS: List[int] = []
+    DEV_USERS: List[int] = []
     REQUIRED_CHANNELS: List[str] = []
     JOINCHECK_CACHE_TTL: int = 300
     JOIN_PROMPT_TEXT: str = "Please join the required channels"
@@ -40,6 +41,8 @@ class Settings(BaseSettings):
     MSSQL_DB: Optional[str] = None
     MSSQL_USER: Optional[str] = None
     MSSQL_PASS: Optional[str] = None
+    DEV_SQL_MAX_ROWS: int = 200
+    DEV_CONFIRM_TIMEOUT: int = 60
 
     @field_validator("ADMIN_IDS", mode="before")
     def parse_admin_ids(cls, v):
@@ -60,3 +63,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra='ignore')
 
 settings = Settings()
+@field_validator("DEV_USERS", mode="before")
+def parse_dev_users(cls, v):
+    if v is None or v == "":
+        return []
+    if isinstance(v, list):
+        return [int(x) for x in v]
+    return [int(x) for x in str(v).split(",") if x]
